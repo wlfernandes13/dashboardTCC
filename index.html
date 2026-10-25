@@ -3,516 +3,1052 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Monitoramento Estrutural - 4 Placas (Aceleração & FFT)</title>
-    <!-- Chart.js -->
+    <title>Painel de Monitoramento Estrutural - Estrutura + Gráficos</title>
+
+    <!-- Chart.js + Zoom (necessários imediatamente para os gráficos) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Chart.js Zoom Plugin -->
     <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+
     <style>
-        body {
-            background-color: #0F172A;
-            color: #F8FAFC;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 20px;
+        :root {
+            --bg: #0F172A;
+            --surface: #1E293B;
+            --surface-2: #172033;
+            --border: #334155;
+            --text: #F8FAFC;
+            --text-dim: #CBD5E1;
+            --accent: #3B82F6;
+            --accent-hover: #2563EB;
+            --green: #10B981;
+            --purple: #8B5CF6;
+            --red: #EF4444;
+            --radius: 10px;
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.25), 0 2px 4px -2px rgba(0,0,0,0.2);
         }
 
-        .header {
-            background-color: #1E293B;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #F8FAFC;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        * { box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+
+        body { padding: 0 0 40px; }
+
+        /* ================= HEADER ================= */
+        .app-header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: linear-gradient(90deg, #0B1220 0%, #1E293B 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+        }
+        .app-header h1 {
+            margin: 0;
+            font-size: 1.15rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .app-header h1 .bolt { color: #FBBF24; font-size: 1.4rem; }
+
+        .nav-tabs { display: flex; gap: 4px; background: rgba(0,0,0,0.25); padding: 4px; border-radius: 8px; }
+        .nav-tabs button {
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: background 0.15s, color 0.15s;
+        }
+        .nav-tabs button:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+        .nav-tabs button.active { background: var(--accent); color: white; }
 
         .live-indicator {
             font-size: 0.85rem;
-            color: #10B981;
-            font-weight: bold;
+            color: var(--green);
+            font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+            white-space: nowrap;
         }
-
         .pulse-dot {
-            width: 10px;
-            height: 10px;
-            background-color: #10B981;
+            width: 10px; height: 10px;
+            background: var(--green);
             border-radius: 50%;
-            display: inline-block;
             animation: pulse 1.5s infinite;
         }
-
         @keyframes pulse {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+            0%   { box-shadow: 0 0 0 0 rgba(16,185,129,0.7); }
+            70%  { box-shadow: 0 0 0 8px rgba(16,185,129,0); }
+            100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
         }
 
+        /* ================= LAYOUT ================= */
+        .page { max-width: 1800px; margin: 0 auto; padding: 24px; }
+
+        section.panel {
+            margin-bottom: 28px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        section.panel > .panel-header {
+            padding: 14px 20px;
+            background: var(--surface-2);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        section.panel > .panel-header h2 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            color: var(--text);
+        }
+        section.panel > .panel-header .panel-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+        .panel-body { padding: 20px; }
+
+        /* ================= CONTROLES ================= */
         .controls {
-            margin-bottom: 20px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            background-color: #1E293B;
-            padding: 15px;
-            border-radius: 8px;
+            gap: 14px;
         }
-
         .control-row {
             display: flex;
-            gap: 15px;
+            gap: 12px;
             align-items: center;
             flex-wrap: wrap;
         }
-
-        select, input, button {
-            padding: 10px 15px;
-            border-radius: 5px;
-            border: 1px solid #334155;
-            background-color: #0F172A;
-            color: #FFF;
-            font-size: 0.95rem;
-            cursor: pointer;
+        .control-row label { font-size: 0.9rem; color: var(--text-dim); }
+        select, input[type="datetime-local"], button {
+            padding: 9px 14px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: #0B1220;
+            color: var(--text);
+            font-size: 0.9rem;
+            transition: border 0.15s, background 0.15s;
         }
-
+        select:focus, input:focus { outline: none; border-color: var(--accent); }
         button {
-            background-color: #3B82F6;
-            font-weight: bold;
+            background: var(--accent);
             border: none;
+            font-weight: 600;
+            cursor: pointer;
+            color: white;
         }
-
-        button:hover {
-            background-color: #2563EB;
-        }
-
-        .charts-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(500px, 1fr));
-            gap: 20px;
-        }
-
-        @media (max-width: 1100px) {
-            .charts-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .chart-card {
-            background-color: #1E293B;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
+        button:hover { background: var(--accent-hover); }
+        button.secondary { background: #64748B; }
+        button.secondary:hover { background: #475569; }
 
         .status-badge {
-            font-size: 0.85rem;
-            color: #10B981;
+            font-size: 0.82rem;
+            color: var(--green);
             font-weight: 500;
+            margin-left: auto;
         }
 
-        .hidden {
-            display: none;
+        /* ================= GRID DE GRÁFICOS ================= */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(420px, 1fr));
+            gap: 16px;
         }
+        @media (max-width: 1100px) {
+            .charts-grid { grid-template-columns: 1fr; }
+        }
+        .chart-card {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            position: relative;
+        }
+
+        /* ================= VISUALIZADOR 3D ================= */
+        #viewer3d-wrap {
+            position: relative;
+            width: 100%;
+            height: 70vh;
+            min-height: 480px;
+            background: #1a1a1a;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        #container3d { width: 100%; height: 100%; }
+
+        #info3d {
+            position: absolute; top: 10px; left: 10px;
+            color: white;
+            background: rgba(0,0,0,0.7);
+            padding: 8px 12px;
+            z-index: 100;
+            font-size: 12px;
+            border-radius: 6px;
+            pointer-events: none;
+        }
+
+        #controls3d {
+            position: absolute; top: 10px; right: 10px;
+            background: rgba(15,23,42,0.9);
+            padding: 12px 14px;
+            border-radius: 8px;
+            color: white;
+            z-index: 100;
+            font-size: 13px;
+            border: 1px solid var(--border);
+            min-width: 220px;
+        }
+        #controls3d select {
+            margin-top: 6px;
+            width: 100%;
+            background: #0B1220;
+        }
+        .slider-container { margin-top: 12px; }
+        .slider-container label { display: block; margin-bottom: 4px; font-size: 12px; }
+        input[type=range] { width: 100%; accent-color: var(--accent); }
+
+        #legend-container {
+            position: absolute; bottom: 20px; right: 20px;
+            display: flex; flex-direction: column; align-items: center;
+            z-index: 100;
+        }
+        #legend-title {
+            color: white; font-size: 12px; font-weight: 600;
+            margin-bottom: 8px;
+            text-shadow: 1px 1px 2px black;
+            background: rgba(0,0,0,0.6);
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+        #legend-wrapper { display: flex; flex-direction: row; height: 260px; }
+        #colorbar {
+            width: 22px; height: 100%;
+            border: 2px solid white;
+            background: linear-gradient(to top, blue 0%, cyan 25%, lime 50%, yellow 75%, red 100%);
+        }
+        #legend-labels {
+            display: flex; flex-direction: column; justify-content: space-between;
+            margin-left: 8px; height: 100%;
+            color: white; font-size: 11px;
+            font-family: 'Consolas', monospace;
+            text-shadow: 1px 1px 2px black;
+            background: rgba(0,0,0,0.6);
+            padding: 4px 6px;
+            border-radius: 4px;
+        }
+
+        .viewer-overlay {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(15,23,42,0.85);
+            z-index: 200;
+            flex-direction: column;
+            gap: 16px;
+            color: var(--text-dim);
+            font-size: 0.95rem;
+        }
+        .viewer-overlay.hidden { display: none; }
+        .spinner {
+            width: 42px; height: 42px;
+            border: 4px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .hidden { display: none !important; }
+
+        .section-anchor { scroll-margin-top: 80px; }
+
+        /* Scrollbar profissional */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <span>⚡ PAINEL DE MONITORAMENTO ESTRUTURAL - 4 PLACAS (ACELERAÇÃO & FFT)</span>
+    <!-- ================= HEADER ================= -->
+    <header class="app-header">
+        <h1><span class="bolt">⚡</span> Monitoramento Estrutural — Estrutura + Gráficos</h1>
+        <nav class="nav-tabs">
+            <button id="tabEstrutura" onclick="navegarPara('sectionEstrutura')" class="active">Estrutura (3D)</button>
+            <button id="tabGraficos" onclick="navegarPara('sectionGraficos')">Gráficos</button>
+        </nav>
         <div class="live-indicator">
             <span class="pulse-dot"></span>
             <span id="txtLiveStatus">MODO TEMPO REAL</span>
         </div>
-    </div>
+    </header>
 
-    <!-- Controles Globais -->
-    <div class="controls">
-        <div class="control-row">
-            <label style="font-weight: bold;">Modo de Visualização:</label>
-            <select id="selectModo" onchange="alternarModo()">
-                <option value="realtime">Tempo Real (Automático)</option>
-                <option value="historico">Janela de Dados (Histórico)</option>
-            </select>
-            <button onclick="resetZoomTodos()" style="background-color: #64748B;">Resetar Zoom de Todos</button>
-        </div>
+    <div class="page">
 
-        <!-- Opções de Tempo Real -->
-        <div id="painelRealtime" class="control-row">
-            <label>Intervalo de Atualização:</label>
-            <select id="selectIntervalo" onchange="reiniciarTimer()">
-                <option value="10000">10 segundos</option>
-                <option value="30000">30 segundos</option>
-                <option value="60000">1 minuto</option>
-                <option value="300000">5 minutos</option>
-                <option value="600000">10 minutos</option>
-                <option value="1800000">30 minutos</option>
-                <option value="3600000">1 hora</option>
-            </select>
-            <button onclick="forcarAtualizacao()">Sincronizar Agora</button>
-            <span id="lastUpdate" class="status-badge">Pronto</span>
-        </div>
+        <!-- ================= SEÇÃO 1: VISUALIZADOR 3D ================= -->
+        <section class="panel section-anchor" id="sectionEstrutura">
+            <div class="panel-header">
+                <h2>🏗️ Visualizador Estrutural Interativo</h2>
+                <span class="panel-subtitle">Rotacione com o mouse · Zoom na roda · Troque o campo e a escala</span>
+            </div>
+            <div class="panel-body">
+                <div id="viewer3d-wrap">
+                    <div id="container3d"></div>
 
-        <!-- Opções de Histórico por Janela -->
-        <div id="painelHistorico" class="control-row hidden">
-            <label>Início:</label>
-            <input type="datetime-local" id="inputInicio">
-            <label>Fim:</label>
-            <input type="datetime-local" id="inputFim">
-            <button onclick="aplicarFiltroHistorico()">Aplicar Filtro em Todas</button>
-        </div>
-    </div>
+                    <div id="info3d">
+                        <b>Visualizador</b><br>
+                        <i>Arraste para rotacionar · Roda para zoom</i>
+                    </div>
 
-    <!-- Gráficos: 2 colunas por linha (Aceleração vs FFT da Resultante para cada placa) -->
-    <div class="charts-grid">
-        <!-- Placa 1 -->
-        <div class="chart-card"><canvas id="chartPlaca1Acel"></canvas></div>
-        <div class="chart-card"><canvas id="chartPlaca1FFT"></canvas></div>
+                    <div id="controls3d">
+                        <label for="fieldSelect">Resultado:</label>
+                        <select id="fieldSelect" disabled>
+                            <option value="S_Mises">Tensão (von Mises)</option>
+                            <option value="U_Mag">Deslocamento (Deformada)</option>
+                        </select>
+                        <div class="slider-container">
+                            <label for="scaleSlider">Escala da Deformada: <span id="scaleValue">50x</span></label>
+                            <input type="range" id="scaleSlider" min="0" max="200" value="50" step="10" disabled>
+                        </div>
+                    </div>
 
-        <!-- Placa 2 -->
-        <div class="chart-card"><canvas id="chartPlaca2Acel"></canvas></div>
-        <div class="chart-card"><canvas id="chartPlaca2FFT"></canvas></div>
+                    <div id="legend-container">
+                        <div id="legend-title">von Mises (MPa)</div>
+                        <div id="legend-wrapper">
+                            <div id="colorbar"></div>
+                            <div id="legend-labels">
+                                <span id="lbl-0">-</span><span id="lbl-1">-</span>
+                                <span id="lbl-2">-</span><span id="lbl-3">-</span>
+                                <span id="lbl-4">-</span><span id="lbl-5">-</span>
+                            </div>
+                        </div>
+                    </div>
 
-        <!-- Placa 3 -->
-        <div class="chart-card"><canvas id="chartPlaca3Acel"></canvas></div>
-        <div class="chart-card"><canvas id="chartPlaca3FFT"></canvas></div>
+                    <!-- Overlay de carregamento -->
+                    <div id="viewerOverlay" class="viewer-overlay">
+                        <div class="spinner"></div>
+                        <div id="overlayText">Carregando visualizador 3D…</div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-        <!-- Placa 4 -->
-        <div class="chart-card"><canvas id="chartPlaca4Acel"></canvas></div>
-        <div class="chart-card"><canvas id="chartPlaca4FFT"></canvas></div>
+        <!-- ================= SEÇÃO 2: GRÁFICOS ================= -->
+        <section class="panel section-anchor" id="sectionGraficos">
+            <div class="panel-header">
+                <h2>📊 Monitoramento — Aceleração & FFT (4 Placas)</h2>
+                <span class="panel-subtitle">Sincronização automática com a planilha</span>
+            </div>
+            <div class="panel-body">
+
+                <!-- Controles globais -->
+                <div class="controls" style="margin-bottom: 20px;">
+                    <div class="control-row">
+                        <label style="font-weight: 600; color: var(--text);">Modo de Visualização:</label>
+                        <select id="selectModo" onchange="alternarModo()">
+                            <option value="realtime">Tempo Real (Automático)</option>
+                            <option value="historico">Janela de Dados (Histórico)</option>
+                        </select>
+                        <button class="secondary" onclick="resetZoomTodos()">Resetar Zoom de Todos</button>
+                    </div>
+
+                    <div id="painelRealtime" class="control-row">
+                        <label>Intervalo:</label>
+                        <select id="selectIntervalo" onchange="reiniciarTimer()">
+                            <option value="10000">10 segundos</option>
+                            <option value="30000">30 segundos</option>
+                            <option value="60000">1 minuto</option>
+                            <option value="300000">5 minutos</option>
+                            <option value="600000">10 minutos</option>
+                            <option value="1800000">30 minutos</option>
+                            <option value="3600000">1 hora</option>
+                        </select>
+                        <button onclick="forcarAtualizacao()">Sincronizar Agora</button>
+                        <span id="lastUpdate" class="status-badge">Pronto</span>
+                    </div>
+
+                    <div id="painelHistorico" class="control-row hidden">
+                        <label>Início:</label>
+                        <input type="datetime-local" id="inputInicio">
+                        <label>Fim:</label>
+                        <input type="datetime-local" id="inputFim">
+                        <button onclick="aplicarFiltroHistorico()">Aplicar Filtro em Todas</button>
+                    </div>
+                </div>
+
+                <!-- Grid de gráficos -->
+                <div class="charts-grid">
+                    <div class="chart-card"><canvas id="chartPlaca1Acel"></canvas></div>
+                    <div class="chart-card"><canvas id="chartPlaca1FFT"></canvas></div>
+                    <div class="chart-card"><canvas id="chartPlaca2Acel"></canvas></div>
+                    <div class="chart-card"><canvas id="chartPlaca2FFT"></canvas></div>
+                    <div class="chart-card"><canvas id="chartPlaca3Acel"></canvas></div>
+                    <div class="chart-card"><canvas id="chartPlaca3FFT"></canvas></div>
+                    <div class="chart-card"><canvas id="chartPlaca4Acel"></canvas></div>
+                    <div class="chart-card"><canvas id="chartPlaca4FFT"></canvas></div>
+                </div>
+
+            </div>
+        </section>
+
     </div>
 
     <script>
-        const SPREADSHEET_ID = '1UE60YdMQbzMsPmKFnq2p9QADqVC9TVblLanJJDEqL3Y';
+    /* =====================================================================
+       ESTADO GLOBAL ÚNICO (evita colisão entre módulos)
+       ===================================================================== */
+    const AppState = {
+        // --- Gráficos ---
+        chartsInstances: {},
+        timerIntervalo: null,
+        requisicaoEmAndamento: false,
+        abortController: null,
+        ultimaFFT: {},
+        // --- VTK / 3D ---
+        vtk: null,
+        vtkReady: false,
+        vtkLoading: false,
+        originalPolydata: null,
+        currentField: 'S_Mises',
+        scaleFactor: 0.05,
+        renderer: null,
+        renderWindow: null,
+        actor: null,
+        mapper: null,
+        // --- UI ---
+        rafPending: false
+    };
 
-        const placasConfig = [
-            { id: '647241587', nome: 'Placa 1 (Placa_01)', acelId: 'chartPlaca1Acel', fftId: 'chartPlaca1FFT', cache: [] },
-            { id: '199228400', nome: 'Placa 2 (Placa_02)', acelId: 'chartPlaca2Acel', fftId: 'chartPlaca2FFT', cache: [] },
-            { id: '1321485967', nome: 'Placa 3 (Placa_04)', acelId: 'chartPlaca3Acel', fftId: 'chartPlaca3FFT', cache: [] },
-            { id: '628945184', nome: 'Placa 4 (Placa_05)', acelId: 'chartPlaca4Acel', fftId: 'chartPlaca4FFT', cache: [] }
-        ];
+    /* =====================================================================
+       NAVEGAÇÃO ENTRE SEÇÕES
+       ===================================================================== */
+    function navegarPara(sectionId) {
+        const el = document.getElementById(sectionId);
+        if (!el) return;
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-        let chartsInstances = {};
-        let timerIntervalo = null;
+        // Atualiza aba ativa
+        document.getElementById('tabEstrutura').classList.toggle('active', sectionId === 'sectionEstrutura');
+        document.getElementById('tabGraficos').classList.toggle('active', sectionId === 'sectionGraficos');
 
-        function inicializarGraficos() {
-            placasConfig.forEach(placa => {
-                // Gráfico Aceleração X, Y, Z
-                const ctxAcel = document.getElementById(placa.acelId).getContext('2d');
-                chartsInstances[placa.acelId] = new Chart(ctxAcel, {
-                    type: 'line',
-                    data: {
-                        labels: [],
-                        datasets: [
-                            { label: 'X (m/s²)', data: [], borderColor: '#EF4444', borderWidth: 1.5, fill: false, pointRadius: 1 },
-                            { label: 'Y (m/s²)', data: [], borderColor: '#10B981', borderWidth: 1.5, fill: false, pointRadius: 1 },
-                            { label: 'Z (m/s²)', data: [], borderColor: '#3B82F6', borderWidth: 1.5, fill: false, pointRadius: 1 }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        animation: false,
-                        plugins: {
-                            title: { display: true, text: `${placa.nome} - Aceleração (X, Y, Z)`, color: '#F8FAFC', font: { size: 14 } },
-                            legend: { labels: { color: '#CBD5E1' } },
-                            zoom: {
-                                zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' },
-                                pan: { enabled: true, mode: 'x' }
-                            }
-                        },
-                        scales: {
-                            x: { ticks: { color: '#CBD5E1', maxTicksLimit: 8 }, grid: { color: '#334155' } },
-                            y: { ticks: { color: '#CBD5E1' }, grid: { color: '#334155' } }
+        // Carrega VTK sob demanda na primeira visita à seção 3D
+        if (sectionId === 'sectionEstrutura' && !AppState.vtkReady && !AppState.vtkLoading) {
+            carregarVTK();
+        }
+    }
+
+    /* =====================================================================
+       ================== MÓDULO 1: VISUALIZADOR 3D ========================
+       ===================================================================== */
+
+    /**
+     * Carrega VTK.js dinamicamente. Só é chamado quando o usuário
+     * realmente visita a seção 3D — economiza ~3 MB no carregamento inicial.
+     */
+    async function carregarVTK() {
+        if (AppState.vtkReady || AppState.vtkLoading) return;
+        AppState.vtkLoading = true;
+
+        const overlay = document.getElementById('viewerOverlay');
+        const overlayText = document.getElementById('overlayText');
+        overlay.classList.remove('hidden');
+        overlayText.innerText = 'Carregando motor 3D (VTK.js)…';
+
+        try {
+            // Carrega o bundle principal do VTK.js
+            await new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                s.src = 'https://unpkg.com/vtk.js';
+                s.onload = resolve;
+                s.onerror = () => reject(new Error('Falha ao carregar VTK.js'));
+                document.head.appendChild(s);
+            });
+
+            if (!window.vtk) throw new Error('VTK.js não expôs o objeto global "vtk"');
+            AppState.vtk = window.vtk;
+
+            overlayText.innerText = 'Inicializando cena…';
+            inicializarCena3D();
+
+            overlayText.innerText = 'Carregando malha (FEMMeshGmsh_mod.vtp)…';
+            await carregarMalha3D();
+
+            AppState.vtkReady = true;
+            overlay.classList.add('hidden');
+        } catch (err) {
+            console.error('Erro ao inicializar 3D:', err);
+            overlayText.innerHTML = '⚠️ Não foi possível carregar o visualizador 3D.<br><small>' + err.message + '</small>';
+        } finally {
+            AppState.vtkLoading = false;
+        }
+    }
+
+    function inicializarCena3D() {
+        const vtk = AppState.vtk;
+
+        const fullScreenRenderer = vtk.Rendering.Misc.vtkFullScreenRenderWindow.newInstance({
+            rootContainer: document.getElementById('container3d'),
+            background: [0.1, 0.13, 0.2]
+        });
+        const renderer = fullScreenRenderer.getRenderer();
+        const renderWindow = fullScreenRenderer.getRenderWindow();
+
+        const actor = vtk.Rendering.Core.vtkActor.newInstance();
+        const mapper = vtk.Rendering.Core.vtkMapper.newInstance();
+        actor.setMapper(mapper);
+        renderer.addActor(actor);
+
+        AppState.renderer = renderer;
+        AppState.renderWindow = renderWindow;
+        AppState.actor = actor;
+        AppState.mapper = mapper;
+    }
+
+    function carregarMalha3D() {
+        const vtk = AppState.vtk;
+        return new Promise((resolve, reject) => {
+            const reader = vtk.IO.XML.vtkXMLPolyDataReader.newInstance();
+            reader.setUrl('FEMMeshGmsh_mod.vtp').then(() => {
+                AppState.originalPolydata = reader.getOutputData(0);
+                AppState.mapper.setInputData(AppState.originalPolydata);
+                AppState.renderer.resetCamera();
+                AppState.renderer.getActiveCamera().zoom(1.5);
+                AppState.renderWindow.render();
+
+                // Habilita controles 3D
+                document.getElementById('fieldSelect').disabled = false;
+                document.getElementById('scaleSlider').disabled = false;
+
+                // Renderiza visualização inicial
+                atualizarVisualizacao3D();
+                resolve();
+            }).catch(reject);
+        });
+    }
+
+    /**
+     * Atualiza cores/malha conforme o campo selecionado.
+     * Otimizações:
+     *  - Reaproveita mapper/actor (não recria)
+     *  - Gera arrays tipados (menos pressão no GC)
+     *  - `getRange()` do próprio VTK em vez de loop manual quando possível
+     */
+    function atualizarVisualizacao3D() {
+        const vtk = AppState.vtk;
+        const original = AppState.originalPolydata;
+        if (!vtk || !original || !AppState.vtkReady) return;
+
+        // Clona os dados para não deformar repetidamente
+        const polydata = vtk.Common.DataModel.vtkPolyData.newInstance();
+        polydata.shallowCopy(original);
+        const pointData = polydata.getPointData();
+
+        const numPoints = polydata.getNumberOfPoints();
+        const colors = new Uint8Array(numPoints * 4);
+
+        let values = null;
+        let min = 0, max = 1;
+
+        if (AppState.currentField === 'S_Mises') {
+            const scalarArray = pointData.getArrayByName('S_Mises');
+            if (scalarArray) {
+                values = scalarArray.getData();
+                const range = scalarArray.getRange();
+                min = range[0];
+                max = range[1];
+                document.getElementById('legend-title').innerText = 'von Mises (MPa)';
+            }
+        } else {
+            const uArray = pointData.getArrayByName('U');
+            if (uArray) {
+                const points = polydata.getPoints();
+                const originalPoints = points.getData();
+                const uData = uArray.getData();
+                const newPoints = new Float32Array(originalPoints.length);
+                values = new Float32Array(numPoints);
+
+                let maxU = 0;
+                const s = AppState.scaleFactor;
+                for (let i = 0; i < numPoints; i++) {
+                    const ux = uData[i * 3];
+                    const uy = uData[i * 3 + 1];
+                    const uz = uData[i * 3 + 2];
+
+                    newPoints[i * 3]     = originalPoints[i * 3]     + ux * s;
+                    newPoints[i * 3 + 1] = originalPoints[i * 3 + 1] + uy * s;
+                    newPoints[i * 3 + 2] = originalPoints[i * 3 + 2] + uz * s;
+
+                    const mag = Math.sqrt(ux*ux + uy*uy + uz*uz);
+                    values[i] = mag;
+                    if (mag > maxU) maxU = mag;
+                }
+                points.setData(newPoints);
+                polydata.modified();
+
+                min = 0;
+                max = maxU > 0 ? maxU : 1;
+                document.getElementById('legend-title').innerText = 'Deslocamento Total';
+            }
+        }
+
+        if (!values) { AppState.renderWindow.render(); return; }
+
+        // Cor + legenda
+        const diff = (max - min) === 0 ? 1 : (max - min);
+        for (let i = 0; i < 6; i++) {
+            const fraction = 1.0 - (i / 5);
+            const val = min + diff * fraction;
+            document.getElementById('lbl-' + i).innerText = val.toFixed(2);
+        }
+
+        for (let i = 0; i < numPoints; i++) {
+            const t = (values[i] - min) / diff;
+            let r, g, b;
+            if (t < 0.25)      { r = 0;             g = t * 4;           b = 1; }
+            else if (t < 0.5)  { r = 0;             g = 1;               b = 1 - (t - 0.25) * 4; }
+            else if (t < 0.75) { r = (t - 0.5) * 4; g = 1;               b = 0; }
+            else               { r = 1;             g = 1 - (t - 0.75)*4; b = 0; }
+
+            const idx = i * 4;
+            colors[idx]     = r * 255;
+            colors[idx + 1] = g * 255;
+            colors[idx + 2] = b * 255;
+            colors[idx + 3] = 255;
+        }
+
+        const colorDataArray = vtk.Common.Core.vtkDataArray.newInstance({
+            name: 'Colors', values: colors, numberOfComponents: 4
+        });
+        pointData.addArray(colorDataArray);
+        pointData.setActiveScalars('Colors');
+
+        AppState.mapper.setScalarModeToUsePointFieldData();
+        AppState.mapper.setColorByArrayName('Colors');
+        AppState.mapper.setScalarRange(min, max);
+        AppState.mapper.setInputData(polydata);
+        AppState.renderWindow.render();
+    }
+
+    /**
+     * Coalesce chamadas em um único frame — arrastar o slider
+     * gera dezenas de eventos 'input' por segundo, mas só renderizamos
+     * uma vez por frame.
+     */
+    function agendarAtualizacao3D() {
+        if (AppState.rafPending) return;
+        AppState.rafPending = true;
+        requestAnimationFrame(() => {
+            AppState.rafPending = false;
+            atualizarVisualizacao3D();
+        });
+    }
+
+    // Listeners do painel 3D
+    document.getElementById('fieldSelect').addEventListener('change', (e) => {
+        AppState.currentField = e.target.value;
+        agendarAtualizacao3D();
+    });
+
+    const slider3d = document.getElementById('scaleSlider');
+    const scaleValueLabel = document.getElementById('scaleValue');
+    slider3d.addEventListener('input', (e) => {
+        const fator = parseInt(e.target.value);
+        scaleValueLabel.innerText = fator + 'x';
+        AppState.scaleFactor = fator * 0.001;
+        if (AppState.currentField === 'U_Mag') agendarAtualizacao3D();
+    });
+
+    /* =====================================================================
+       ================== MÓDULO 2: GRÁFICOS ==============================
+       ===================================================================== */
+
+    const SPREADSHEET_ID = '1UE60YdMQbzMsPmKFnq2p9QADqVC9TVblLanJJDEqL3Y';
+
+    const MAX_CACHE_PONTOS   = 5000;
+    const MAX_PONTOS_GRAFICO = 600;
+    const MAX_PONTOS_FFT     = 128;
+
+    const placasConfig = [
+        { id: '647241587',  nome: 'Placa 1 (Placa_01)', acelId: 'chartPlaca1Acel', fftId: 'chartPlaca1FFT', cache: [] },
+        { id: '199228400',  nome: 'Placa 2 (Placa_02)', acelId: 'chartPlaca2Acel', fftId: 'chartPlaca2FFT', cache: [] },
+        { id: '1321485967', nome: 'Placa 3 (Placa_04)', acelId: 'chartPlaca3Acel', fftId: 'chartPlaca3FFT', cache: [] },
+        { id: '628945184',  nome: 'Placa 4 (Placa_05)', acelId: 'chartPlaca4Acel', fftId: 'chartPlaca4FFT', cache: [] }
+    ];
+
+    function inicializarGraficos() {
+        placasConfig.forEach(placa => {
+            const ctxAcel = document.getElementById(placa.acelId).getContext('2d');
+            AppState.chartsInstances[placa.acelId] = new Chart(ctxAcel, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        { label: 'X (m/s²)', data: [], borderColor: '#EF4444', borderWidth: 1.5, fill: false, pointRadius: 0 },
+                        { label: 'Y (m/s²)', data: [], borderColor: '#10B981', borderWidth: 1.5, fill: false, pointRadius: 0 },
+                        { label: 'Z (m/s²)', data: [], borderColor: '#3B82F6', borderWidth: 1.5, fill: false, pointRadius: 0 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    animation: false,
+                    parsing: false,
+                    normalized: true,
+                    plugins: {
+                        decimation: { enabled: true, algorithm: 'min-max', samples: MAX_PONTOS_GRAFICO },
+                        title: { display: true, text: `${placa.nome} - Aceleração (X, Y, Z)`, color: '#F8FAFC', font: { size: 14 } },
+                        legend: { labels: { color: '#CBD5E1' } },
+                        zoom: {
+                            zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' },
+                            pan: { enabled: true, mode: 'x' }
                         }
-                    }
-                });
-
-                // Gráfico FFT da Resultante
-                const ctxFFT = document.getElementById(placa.fftId).getContext('2d');
-                chartsInstances[placa.fftId] = new Chart(ctxFFT, {
-                    type: 'bar',
-                    data: {
-                        labels: [],
-                        datasets: [{
-                            label: 'Magnitude (Resultante)',
-                            data: [],
-                            backgroundColor: '#8B5CF6'
-                        }]
                     },
-                    options: {
-                        responsive: true,
-                        animation: false,
-                        plugins: {
-                            title: { display: true, text: `${placa.nome} - FFT (Aceleração Resultante)`, color: '#F8FAFC', font: { size: 14 } },
-                            legend: { display: false }
-                        },
-                        scales: {
-                            x: { ticks: { color: '#CBD5E1', maxTicksLimit: 8 }, grid: { color: '#334155' } },
-                            y: { ticks: { color: '#CBD5E1' }, grid: { color: '#334155' } }
-                        }
+                    scales: {
+                        x: { ticks: { color: '#CBD5E1', maxTicksLimit: 8 }, grid: { color: '#334155' } },
+                        y: { ticks: { color: '#CBD5E1' }, grid: { color: '#334155' } }
                     }
-                });
-            });
-        }
-
-        function parseCellDataHora(cell) {
-            if (!cell) return null;
-            if (typeof cell.v === 'string' && cell.v.indexOf('Date(') === 0) {
-                const matches = cell.v.match(/\d+/g);
-                if (matches && matches.length >= 3) {
-                    return new Date(
-                        parseInt(matches[0]),
-                        parseInt(matches[1]),
-                        parseInt(matches[2]),
-                        parseInt(matches[3] || 0),
-                        parseInt(matches[4] || 0),
-                        parseInt(matches[5] || 0)
-                    );
                 }
-            }
-            const str = cell.f || cell.v;
-            if (!str) return null;
-            const partes = String(str).trim().split(' ');
-            if (partes.length >= 1) {
-                const dataPartes = partes[0].split('/');
-                if (dataPartes.length === 3) {
-                    const m = parseInt(dataPartes[0]) - 1;
-                    const d = parseInt(dataPartes[1]);
-                    const a = parseInt(dataPartes[2]);
+            });
 
-                    let h = 0, min = 0, s = 0;
-                    if (partes.length >= 2) {
-                        const horaPartes = partes[1].split(':');
-                        h = parseInt(horaPartes[0] || 0);
-                        min = parseInt(horaPartes[1] || 0);
-                        s = parseInt(horaPartes[2] || 0);
+            const ctxFFT = document.getElementById(placa.fftId).getContext('2d');
+            AppState.chartsInstances[placa.fftId] = new Chart(ctxFFT, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{ label: 'Magnitude (Resultante)', data: [], backgroundColor: '#8B5CF6' }]
+                },
+                options: {
+                    responsive: true,
+                    animation: false,
+                    plugins: {
+                        title: { display: true, text: `${placa.nome} - FFT (Aceleração Resultante)`, color: '#F8FAFC', font: { size: 14 } },
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#CBD5E1', maxTicksLimit: 8 }, grid: { color: '#334155' } },
+                        y: { ticks: { color: '#CBD5E1' }, grid: { color: '#334155' } }
                     }
-                    const dt = new Date(a, m, d, h, min, s);
-                    if (!isNaN(dt.getTime())) return dt;
+                }
+            });
+        });
+    }
+
+    function parseCellDataHora(cell) {
+        if (!cell) return null;
+        if (typeof cell.v === 'string' && cell.v.indexOf('Date(') === 0) {
+            const matches = cell.v.match(/\d+/g);
+            if (matches && matches.length >= 3) {
+                return new Date(
+                    parseInt(matches[0]), parseInt(matches[1]), parseInt(matches[2]),
+                    parseInt(matches[3] || 0), parseInt(matches[4] || 0), parseInt(matches[5] || 0)
+                );
+            }
+        }
+        const str = cell.f || cell.v;
+        if (!str) return null;
+        const partes = String(str).trim().split(' ');
+        if (partes.length >= 1) {
+            const dataPartes = partes[0].split('/');
+            if (dataPartes.length === 3) {
+                const m = parseInt(dataPartes[0]) - 1;
+                const d = parseInt(dataPartes[1]);
+                const a = parseInt(dataPartes[2]);
+                let h = 0, min = 0, s = 0;
+                if (partes.length >= 2) {
+                    const hp = partes[1].split(':');
+                    h = parseInt(hp[0] || 0); min = parseInt(hp[1] || 0); s = parseInt(hp[2] || 0);
+                }
+                const dt = new Date(a, m, d, h, min, s);
+                if (!isNaN(dt.getTime())) return dt;
+            }
+        }
+        const parsedNative = new Date(str);
+        return isNaN(parsedNative.getTime()) ? null : parsedNative;
+    }
+
+    function formatarParaDatetimeLocal(date) {
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    }
+
+    function definirDatasDefaultHoje() {
+        const agora = new Date();
+        const inicioHoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate(), 0, 0, 0);
+        const fimHoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate(), 23, 59, 59);
+        document.getElementById('inputInicio').value = formatarParaDatetimeLocal(inicioHoje);
+        document.getElementById('inputFim').value = formatarParaDatetimeLocal(fimHoje);
+    }
+
+    // FFT radix-2 iterativa — O(N log N)
+    function calcularFFT(sinal, fs) {
+        const N = sinal.length;
+        if (N === 0) return { freqs: [], mags: [] };
+
+        let n = 1;
+        while (n < N) n <<= 1;
+        const re = new Float64Array(n);
+        const im = new Float64Array(n);
+        for (let i = 0; i < N; i++) re[i] = sinal[i];
+
+        for (let i = 1, j = 0; i < n; i++) {
+            let bit = n >> 1;
+            for (; j & bit; bit >>= 1) j ^= bit;
+            j ^= bit;
+            if (i < j) { [re[i], re[j]] = [re[j], re[i]]; [im[i], im[j]] = [im[j], im[i]]; }
+        }
+
+        for (let len = 2; len <= n; len <<= 1) {
+            const ang = -2 * Math.PI / len;
+            const wRe = Math.cos(ang), wIm = Math.sin(ang);
+            for (let i = 0; i < n; i += len) {
+                let curRe = 1, curIm = 0;
+                for (let k = 0; k < len / 2; k++) {
+                    const uRe = re[i + k], uIm = im[i + k];
+                    const vRe = re[i + k + len / 2] * curRe - im[i + k + len / 2] * curIm;
+                    const vIm = re[i + k + len / 2] * curIm + im[i + k + len / 2] * curRe;
+                    re[i + k] = uRe + vRe; im[i + k] = uIm + vIm;
+                    re[i + k + len / 2] = uRe - vRe; im[i + k + len / 2] = uIm - vIm;
+                    const nRe = curRe * wRe - curIm * wIm;
+                    curIm = curRe * wIm + curIm * wRe;
+                    curRe = nRe;
                 }
             }
-            const parsedNative = new Date(str);
-            return isNaN(parsedNative.getTime()) ? null : parsedNative;
         }
 
-        function formatarParaDatetimeLocal(date) {
-            const pad = (n) => String(n).padStart(2, '0');
-            return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+        const freqs = [], mags = [];
+        for (let k = 0; k < Math.floor(n / 2); k++) {
+            const mag = Math.sqrt(re[k] * re[k] + im[k] * im[k]) / n;
+            freqs.push(((k * fs) / n).toFixed(2) + ' Hz');
+            mags.push(Number(mag.toFixed(4)));
         }
+        return { freqs, mags };
+    }
 
-        function definirDatasDefaultHoje() {
-            const agora = new Date();
-            const inicioHoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate(), 0, 0, 0);
-            const fimHoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate(), 23, 59, 59);
+    function baixarDadosTodasPlacas(callback) {
+        if (AppState.requisicaoEmAndamento) { if (callback) callback(); return; }
+        AppState.requisicaoEmAndamento = true;
+        document.getElementById('lastUpdate').innerText = 'Sincronizando 4 placas…';
 
-            document.getElementById('inputInicio').value = formatarParaDatetimeLocal(inicioHoje);
-            document.getElementById('inputFim').value = formatarParaDatetimeLocal(fimHoje);
-        }
+        if (AppState.abortController) AppState.abortController.abort();
+        AppState.abortController = new AbortController();
+        const signal = AppState.abortController.signal;
 
-        function calcularFFT(sinal, fs) {
-            const N = sinal.length;
-            if (N === 0) return { freqs: [], mags: [] };
-            let freqs = [];
-            let mags = [];
-            for (let k = 0; k < Math.floor(N / 2); k++) {
-                let re = 0, im = 0;
-                for (let n = 0; n < N; n++) {
-                    let angle = (2 * Math.PI * k * n) / N;
-                    re += sinal[n] * Math.cos(angle);
-                    im -= sinal[n] * Math.sin(angle);
-                }
-                let mag = Math.sqrt(re * re + im * im) / N;
-                let freq = (k * fs) / N;
-                freqs.push(freq.toFixed(2) + " Hz");
-                mags.push(mag.toFixed(4));
-            }
-            return { freqs, mags };
-        }
+        const promessas = placasConfig.map(placa => {
+            const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&gid=${placa.id}`;
+            return fetch(url, { signal })
+                .then(res => res.text())
+                .then(txt => {
+                    const jsonString = txt.match(/google\.visualization\.Query\.setResponse\(([\s\S\w]+)\);/);
+                    if (!jsonString) return;
+                    const data = JSON.parse(jsonString[1]);
+                    const novoCache = data.table.rows.map(row => {
+                        if (!row.c) return null;
+                        const cell0 = row.c[0];
+                        const dateObj = parseCellDataHora(cell0);
+                        if (!dateObj) return null;
+                        const horaStr = cell0.f || cell0.v || dateObj.toLocaleString('pt-BR');
+                        const x = row.c[2] ? Number(row.c[2].v) : 0;
+                        const y = row.c[3] ? Number(row.c[3].v) : 0;
+                        const z = row.c[4] ? Number(row.c[4].v) : 0;
+                        const resultante = Math.sqrt(x * x + y * y + z * z);
+                        return { dataHora: dateObj, horaStr, x, y, z, resultante, dt: row.c[5] ? Number(row.c[5].v) : 0 };
+                    }).filter(item => item !== null);
 
-        function baixarDadosTodasPlacas(callback) {
-            document.getElementById('lastUpdate').innerText = "Sincronizando 4 placas...";
-
-            const promessas = placasConfig.map(placa => {
-                const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&gid=${placa.id}`;
-                return fetch(url)
-                    .then(res => res.text())
-                    .then(txt => {
-                        const jsonString = txt.match(/google\.visualization\.Query\.setResponse\(([\s\S\w]+)\);/);
-                        if (!jsonString) return;
-                        const data = JSON.parse(jsonString[1]);
-                        placa.cache = data.table.rows.map(row => {
-                            if (!row.c) return null;
-                            const cell0 = row.c[0];
-                            const dateObj = parseCellDataHora(cell0);
-                            if (!dateObj) return null;
-                            const horaStr = cell0.f || cell0.v || dateObj.toLocaleString('pt-BR');
-                            const x = row.c[2] ? Number(row.c[2].v) : 0;
-                            const y = row.c[3] ? Number(row.c[3].v) : 0;
-                            const z = row.c[4] ? Number(row.c[4].v) : 0;
-                            const resultante = Math.sqrt(x * x + y * y + z * z);
-                            return {
-                                dataHora: dateObj,
-                                horaStr: horaStr,
-                                x: x,
-                                y: y,
-                                z: z,
-                                resultante: resultante,
-                                dt: row.c[5] ? Number(row.c[5].v) : 0
-                            };
-                        }).filter(item => item !== null);
-                    })
-                    .catch(err => console.error(`Erro ao carregar ${placa.nome}:`, err));
-            });
-
-            Promise.all(promessas).then(() => {
-                document.getElementById('lastUpdate').innerText = "Atualizado às " + new Date().toLocaleTimeString();
-                if (callback) callback();
-            });
-        }
-
-        function atualizarGraficosPlaca(placa, dadosFiltrados) {
-            let labels = [];
-            let dataX = [];
-            let dataY = [];
-            let dataZ = [];
-            let dataResultante = [];
-            let dts = [];
-
-            dadosFiltrados.forEach(item => {
-                labels.push(item.horaStr);
-                dataX.push(item.x);
-                dataY.push(item.y);
-                dataZ.push(item.z);
-                dataResultante.push(item.resultante);
-                if (item.dt > 0) dts.push(item.dt);
-            });
-
-            // Atualiza gráfico temporal X, Y, Z
-            const chartAcel = chartsInstances[placa.acelId];
-            if (chartAcel) {
-                chartAcel.data.labels = labels;
-                chartAcel.data.datasets[0].data = dataX;
-                chartAcel.data.datasets[1].data = dataY;
-                chartAcel.data.datasets[2].data = dataZ;
-                chartAcel.update('none');
-            }
-
-            // Calcula FFT da Resultante
-            let dtMedio = dts.length > 0 ? (dts.reduce((a, b) => a + b, 0) / dts.length) : 6.0;
-            let fs = 1.0 / dtMedio;
-            let pontosFFT = dataResultante.slice(-128);
-            let resFFT = calcularFFT(pontosFFT, fs);
-
-            // Atualiza gráfico FFT
-            const chartFFT = chartsInstances[placa.fftId];
-            if (chartFFT) {
-                chartFFT.data.labels = resFFT.freqs;
-                chartFFT.data.datasets[0].data = resFFT.mags;
-                chartFFT.update('none');
-            }
-        }
-
-        function processarModoTempoReal() {
-            placasConfig.forEach(placa => {
-                if (placa.cache.length === 0) {
-                    atualizarGraficosPlaca(placa, []);
-                    return;
-                }
-                const ultimoRegistro = placa.cache[placa.cache.length - 1];
-                const limiteTempo = new Date(ultimoRegistro.dataHora.getTime() - (24 * 60 * 60 * 1000));
-                const dadosRecentes = placa.cache.filter(item => item.dataHora >= limiteTempo);
-                atualizarGraficosPlaca(placa, dadosRecentes);
-            });
-        }
-
-        function processarModoHistorico() {
-            const inicioStr = document.getElementById('inputInicio').value;
-            const fimStr = document.getElementById('inputFim').value;
-
-            if (!inicioStr || !fimStr) return;
-
-            const dataInicio = new Date(inicioStr);
-            const dataFim = new Date(fimStr);
-
-            placasConfig.forEach(placa => {
-                const dadosFiltrados = placa.cache.filter(item => {
-                    return item.dataHora >= dataInicio && item.dataHora <= dataFim;
+                    if (novoCache.length > MAX_CACHE_PONTOS) placa.cache = novoCache.slice(-MAX_CACHE_PONTOS);
+                    else placa.cache = novoCache;
+                })
+                .catch(err => {
+                    if (err.name !== 'AbortError') console.error(`Erro ao carregar ${placa.nome}:`, err);
                 });
-                atualizarGraficosPlaca(placa, dadosFiltrados);
-            });
+        });
+
+        Promise.all(promessas).then(() => {
+            AppState.requisicaoEmAndamento = false;
+            document.getElementById('lastUpdate').innerText = 'Atualizado às ' + new Date().toLocaleTimeString();
+            if (callback) callback();
+        }).catch(() => { AppState.requisicaoEmAndamento = false; });
+    }
+
+    function atualizarGraficosPlaca(placa, dadosFiltrados) {
+        if (dadosFiltrados.length === 0) {
+            const chartAcel = AppState.chartsInstances[placa.acelId];
+            const chartFFT = AppState.chartsInstances[placa.fftId];
+            if (chartAcel) { chartAcel.data.labels = []; chartAcel.data.datasets.forEach(d => d.data = []); chartAcel.update('none'); }
+            if (chartFFT) { chartFFT.data.labels = []; chartFFT.data.datasets[0].data = []; chartFFT.update('none'); }
+            return;
         }
 
-        function carregarDadosGeral() {
-            baixarDadosTodasPlacas(() => {
-                const modo = document.getElementById('selectModo').value;
-                if (modo === 'realtime') {
-                    processarModoTempoReal();
-                } else {
-                    processarModoHistorico();
-                }
-            });
+        const dadosGrafico = dadosFiltrados.length > MAX_PONTOS_GRAFICO
+            ? dadosFiltrados.slice(-MAX_PONTOS_GRAFICO)
+            : dadosFiltrados;
+
+        const labels = new Array(dadosGrafico.length);
+        const dataX = new Array(dadosGrafico.length);
+        const dataY = new Array(dadosGrafico.length);
+        const dataZ = new Array(dadosGrafico.length);
+        const dataResultante = new Array(dadosGrafico.length);
+        let somaDt = 0, contDt = 0;
+
+        for (let i = 0; i < dadosGrafico.length; i++) {
+            const item = dadosGrafico[i];
+            labels[i] = item.horaStr;
+            dataX[i] = item.x;
+            dataY[i] = item.y;
+            dataZ[i] = item.z;
+            dataResultante[i] = item.resultante;
+            if (item.dt > 0) { somaDt += item.dt; contDt++; }
         }
 
-        function alternarModo() {
+        const chartAcel = AppState.chartsInstances[placa.acelId];
+        if (chartAcel) {
+            chartAcel.data.labels = labels;
+            chartAcel.data.datasets[0].data = dataX;
+            chartAcel.data.datasets[1].data = dataY;
+            chartAcel.data.datasets[2].data = dataZ;
+            chartAcel.update('none');
+        }
+
+        const janelaFFT = dataResultante.slice(-MAX_PONTOS_FFT);
+        const dtMedio = contDt > 0 ? somaDt / contDt : 6.0;
+        const fs = 1.0 / dtMedio;
+
+        const hash = janelaFFT.length + '|' + janelaFFT[0] + '|' + janelaFFT[janelaFFT.length - 1] + '|' + dtMedio;
+        if (AppState.ultimaFFT[placa.acelId] === hash) return;
+
+        const resFFT = calcularFFT(janelaFFT, fs);
+        AppState.ultimaFFT[placa.acelId] = hash;
+
+        const chartFFT = AppState.chartsInstances[placa.fftId];
+        if (chartFFT) {
+            chartFFT.data.labels = resFFT.freqs;
+            chartFFT.data.datasets[0].data = resFFT.mags;
+            chartFFT.update('none');
+        }
+    }
+
+    function processarModoTempoReal() {
+        placasConfig.forEach(placa => {
+            if (placa.cache.length === 0) { atualizarGraficosPlaca(placa, []); return; }
+            const ultimoRegistro = placa.cache[placa.cache.length - 1];
+            const limiteTempo = new Date(ultimoRegistro.dataHora.getTime() - 24 * 60 * 60 * 1000);
+            const dadosRecentes = placa.cache.filter(item => item.dataHora >= limiteTempo);
+            atualizarGraficosPlaca(placa, dadosRecentes);
+        });
+    }
+
+    function processarModoHistorico() {
+        const inicioStr = document.getElementById('inputInicio').value;
+        const fimStr = document.getElementById('inputFim').value;
+        if (!inicioStr || !fimStr) return;
+        const dataInicio = new Date(inicioStr);
+        const dataFim = new Date(fimStr);
+
+        placasConfig.forEach(placa => {
+            const dadosFiltrados = placa.cache.filter(item => item.dataHora >= dataInicio && item.dataHora <= dataFim);
+            atualizarGraficosPlaca(placa, dadosFiltrados);
+        });
+    }
+
+    function carregarDadosGeral() {
+        baixarDadosTodasPlacas(() => {
             const modo = document.getElementById('selectModo').value;
-            const painelRT = document.getElementById('painelRealtime');
-            const painelHist = document.getElementById('painelHistorico');
-            const txtStatus = document.getElementById('txtLiveStatus');
+            if (modo === 'realtime') processarModoTempoReal();
+            else processarModoHistorico();
+        });
+    }
 
-            if (modo === 'realtime') {
-                painelRT.classList.remove('hidden');
-                painelHist.classList.add('hidden');
-                txtStatus.innerText = "MODO TEMPO REAL";
-                reiniciarTimer();
-                processarModoTempoReal();
-            } else {
-                painelRT.classList.add('hidden');
-                painelHist.classList.remove('hidden');
-                txtStatus.innerText = "MODO HISTÓRICO (JANELA)";
-                if (timerIntervalo) clearInterval(timerIntervalo);
-                processarModoHistorico();
-            }
-        }
+    function alternarModo() {
+        const modo = document.getElementById('selectModo').value;
+        const painelRT = document.getElementById('painelRealtime');
+        const painelHist = document.getElementById('painelHistorico');
+        const txtStatus = document.getElementById('txtLiveStatus');
 
-        function reiniciarTimer() {
-            if (timerIntervalo) clearInterval(timerIntervalo);
-            const intervaloMs = parseInt(document.getElementById('selectIntervalo').value);
-            timerIntervalo = setInterval(() => {
-                baixarDadosTodasPlacas(() => {
-                    const modo = document.getElementById('selectModo').value;
-                    if (modo === 'realtime') processarModoTempoReal();
-                });
-            }, intervaloMs);
-        }
-
-        function forcarAtualizacao() {
-            carregarDadosGeral();
-        }
-
-        function aplicarFiltroHistorico() {
+        if (modo === 'realtime') {
+            painelRT.classList.remove('hidden');
+            painelHist.classList.add('hidden');
+            txtStatus.innerText = 'MODO TEMPO REAL';
+            reiniciarTimer();
+            processarModoTempoReal();
+        } else {
+            painelRT.classList.add('hidden');
+            painelHist.classList.remove('hidden');
+            txtStatus.innerText = 'MODO HISTÓRICO (JANELA)';
+            if (AppState.timerIntervalo) { clearInterval(AppState.timerIntervalo); AppState.timerIntervalo = null; }
             processarModoHistorico();
         }
+    }
 
-        function resetZoomTodos() {
-            Object.values(chartsInstances).forEach(chart => {
-                chart.resetZoom();
+    function reiniciarTimer() {
+        if (AppState.timerIntervalo) { clearInterval(AppState.timerIntervalo); AppState.timerIntervalo = null; }
+        const intervaloMs = parseInt(document.getElementById('selectIntervalo').value);
+        AppState.timerIntervalo = setInterval(() => {
+            baixarDadosTodasPlacas(() => {
+                const modo = document.getElementById('selectModo').value;
+                if (modo === 'realtime') processarModoTempoReal();
             });
-        }
+        }, intervaloMs);
+    }
 
-        window.addEventListener('DOMContentLoaded', () => {
-            definirDatasDefaultHoje();
-            inicializarGraficos();
-            carregarDadosGeral();
-            reiniciarTimer();
-        });
+    function forcarAtualizacao()      { carregarDadosGeral(); }
+    function aplicarFiltroHistorico() { processarModoHistorico(); }
+    function resetZoomTodos() {
+        Object.values(AppState.chartsInstances).forEach(chart => chart.resetZoom());
+    }
+
+    /* =====================================================================
+       INICIALIZAÇÃO
+       ===================================================================== */
+    window.addEventListener('DOMContentLoaded', () => {
+        // Gráficos primeiro (leves, usados imediatamente)
+        definirDatasDefaultHoje();
+        inicializarGraficos();
+        carregarDadosGeral();
+        reiniciarTimer();
+
+        // VTK só carrega se o usuário rolar para a seção 3D
+        // (também dispara no clique da aba)
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !AppState.vtkReady && !AppState.vtkLoading) {
+                    carregarVTK();
+                    observer.disconnect();
+                }
+            });
+        }, { rootMargin: '200px' });
+        observer.observe(document.getElementById('sectionEstrutura'));
+    });
+
+    window.addEventListener('beforeunload', () => {
+        if (AppState.timerIntervalo) clearInterval(AppState.timerIntervalo);
+        if (AppState.abortController) AppState.abortController.abort();
+    });
     </script>
 </body>
 </html>
