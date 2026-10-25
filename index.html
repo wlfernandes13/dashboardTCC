@@ -510,13 +510,13 @@
         const renderer = fullScreenRenderer.getRenderer();
         const renderWindow = fullScreenRenderer.getRenderWindow();
 
-        const light1 = vtk.Rendering.Core.vtkLight.newInstance();
-        light1.setLightTypeToHeadlight();
-        renderer.addLight(light1);
+        // O VTK.js já cria uma luz padrão automaticamente.
+        // Não precisamos instanciar vtkLight manualmente aqui.
 
         const actor = vtk.Rendering.Core.vtkActor.newInstance();
         const mapper = vtk.Rendering.Core.vtkMapper.newInstance();
         
+        // Propriedades de material para garantir visibilidade (opcional)
         const property = actor.getProperty();
         property.setAmbient(0.2);
         property.setDiffuse(0.8);
