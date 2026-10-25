@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Monitoramento Estrutural - 4 Placas (Aceleração & FFT)</title>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js Zoom Plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+    <style>
+        body {
+            background-color: #0F172A;
+            color: #F8FAFC;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .header {
+            background-color: #1E293B;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #F8FAFC;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .live-indicator {
+            font-size: 0.85rem;
+            color: #10B981;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .pulse-dot {
+            width: 10px;
+            height: 10px;
+            background-color: #10B981;
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background-color: #1E293B;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        select, input, button {
+            padding: 10px 15px;
+            border-radius: 5px;
+            border: 1px solid #334155;
+            background-color: #0F172A;
+            color: #FFF;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+        button {
+            background-color: #3B82F6;
+            font-weight: bold;
+            border: none;
+        }
+
+        button:hover {
+            background-color: #2563EB;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(500px, 1fr));
+            gap: 20px;
+        }
+
+        @media (max-width: 1100px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-card {
+            background-color: #1E293B;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-badge {
+            font-size: 0.85rem;
+            color: #10B981;
+            font-weight: 500;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <span>⚡ PAINEL DE MONITORAMENTO ESTRUTURAL - 4 PLACAS (ACELERAÇÃO & FFT)</span>
+        <div class="live-indicator">
+            <span class="pulse-dot"></span>
+            <span id="txtLiveStatus">MODO TEMPO REAL</span>
+        </div>
+    </div>
+
+    <!-- Controles Globais -->
+    <div class="controls">
+        <div class="control-row">
+            <label style="font-weight: bold;">Modo de Visualização:</label>
+            <select id="selectModo" onchange="alternarModo()">
+                <option value="realtime">Tempo Real (Automático)</option>
+                <option value="historico">Janela de Dados (Histórico)</option>
+            </select>
+            <button onclick="resetZoomTodos()" style="background-color: #64748B;">Resetar Zoom de Todos</button>
+        </div>
+
+        <!-- Opções de Tempo Real -->
+        <div id="painelRealtime" class="control-row">
+            <label>Intervalo de Atualização:</label>
+            <select id="selectIntervalo" onchange="reiniciarTimer()">
+                <option value="10000">10 segundos</option>
+                <option value="30000">30 segundos</option>
+                <option value="60000">1 minuto</option>
+                <option value="300000">5 minutos</option>
+                <option value="600000">10 minutos</option>
+                <option value="1800000">30 minutos</option>
+                <option value="3600000">1 hora</option>
+            </select>
+            <button onclick="forcarAtualizacao()">Sincronizar Agora</button>
+            <span id="lastUpdate" class="status-badge">Pronto</span>
+        </div>
+
+        <!-- Opções de Histórico por Janela -->
+        <div id="painelHistorico" class="control-row hidden">
+            <label>Início:</label>
+            <input type="datetime-local" id="inputInicio">
+            <label>Fim:</label>
+            <input type="datetime-local" id="inputFim">
+            <button onclick="aplicarFiltroHistorico()">Aplicar Filtro em Todas</button>
+        </div>
+    </div>
+
+    <!-- Gráficos: 2 colunas por linha (Aceleração vs FFT da Resultante para cada placa) -->
+    <div class="charts-grid">
+        <!-- Placa 1 -->
+        <div class="chart-card"><canvas id="chartPlaca1Acel"></canvas></div>
+        <div class="chart-card"><canvas id="chartPlaca1FFT"></canvas></div>
+
+        <!-- Placa 2 -->
+        <div class="chart-card"><canvas id="chartPlaca2Acel"></canvas></div>
+        <div class="chart-card"><canvas id="chartPlaca2FFT"></canvas></div>
+
+        <!-- Placa 3 -->
+        <div class="chart-card"><canvas id="chartPlaca3Acel"></canvas></div>
+        <div class="chart-card"><canvas id="chartPlaca3FFT"></canvas></div>
+
+        <!-- Placa 4 -->
+        <div class="chart-card"><canvas id="chartPlaca4Acel"></canvas></div>
+        <div class="chart-card"><canvas id="chartPlaca4FFT"></canvas></div>
+    </div>
+
+    <script>
+        const SPREADSHEET_ID = '1UE60YdMQbzMsPmKFnq2p9QADqVC9TVblLanJJDEqL3Y';
+
+        const placasConfig = [
+            { id: '647241587', nome: 'Placa 1 (Placa_01)', acelId: 'chartPlaca1Acel', fftId: 'chartPlaca1FFT', cache: [] },
+            { id: '199228400', nome: 'Placa 2 (Placa_02)', acelId: 'chartPlaca2Acel', fftId: 'chartPlaca2FFT', cache: [] },
+            { id: '1321485967', nome: 'Placa 3 (Placa_04)', acelId: 'chartPlaca3Acel', fftId: 'chartPlaca3FFT', cache: [] },
+            { id: '628945184', nome: 'Placa 4 (Placa_05)', acelId: 'chartPlaca4Acel', fftId: 'chartPlaca4FFT', cache: [] }
+        ];
+
+        let chartsInstances = {};
+        let timerIntervalo = null;
+
+        function inicializarGraficos() {
+            placasConfig.forEach(placa => {
+                // Gráfico Aceleração X, Y, Z
+                const ctxAcel = document.getElementById(placa.acelId).getContext('2d');
+                chartsInstances[placa.acelId] = new Chart(ctxAcel, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [
+                            { label: 'X (m/s²)', data: [], borderColor: '#EF4444', borderWidth: 1.5, fill: false, pointRadius: 1 },
+                            { label: 'Y (m/s²)', data: [], borderColor: '#10B981', borderWidth: 1.5, fill: false, pointRadius: 1 },
+                            { label: 'Z (m/s²)', data: [], borderColor: '#3B82F6', borderWidth: 1.5, fill: false, pointRadius: 1 }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        animation: false,
+                        plugins: {
+                            title: { display: true, text: `${placa.nome} - Aceleração (X, Y, Z)`, color: '#F8FAFC', font: { size: 14 } },
+                            legend: { labels: { color: '#CBD5E1' } },
+                            zoom: {
+                                zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' },
+                                pan: { enabled: true, mode: 'x' }
+                            }
+                        },
+                        scales: {
+                            x: { ticks: { color: '#CBD5E1', maxTicksLimit: 8 }, grid: { color: '#334155' } },
+                            y: { ticks: { color: '#CBD5E1' }, grid: { color: '#334155' } }
+                        }
+                    }
+                });
+
+                // Gráfico FFT da Resultante
+                const ctxFFT = document.getElementById(placa.fftId).getContext('2d');
+                chartsInstances[placa.fftId] = new Chart(ctxFFT, {
+                    type: 'bar',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'Magnitude (Resultante)',
+                            data: [],
+                            backgroundColor: '#8B5CF6'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        animation: false,
+                        plugins: {
+                            title: { display: true, text: `${placa.nome} - FFT (Aceleração Resultante)`, color: '#F8FAFC', font: { size: 14 } },
+                            legend: { display: false }
+                        },
+                        scales: {
+                            x: { ticks: { color: '#CBD5E1', maxTicksLimit: 8 }, grid: { color: '#334155' } },
+                            y: { ticks: { color: '#CBD5E1' }, grid: { color: '#334155' } }
+                        }
+                    }
+                });
+            });
+        }
+
+        function parseCellDataHora(cell) {
+            if (!cell) return null;
+            if (typeof cell.v === 'string' && cell.v.indexOf('Date(') === 0) {
+                const matches = cell.v.match(/\d+/g);
+                if (matches && matches.length >= 3) {
+                    return new Date(
+                        parseInt(matches[0]),
+                        parseInt(matches[1]),
+                        parseInt(matches[2]),
+                        parseInt(matches[3] || 0),
+                        parseInt(matches[4] || 0),
+                        parseInt(matches[5] || 0)
+                    );
+                }
+            }
+            const str = cell.f || cell.v;
+            if (!str) return null;
+            const partes = String(str).trim().split(' ');
+            if (partes.length >= 1) {
+                const dataPartes = partes[0].split('/');
+                if (dataPartes.length === 3) {
+                    const m = parseInt(dataPartes[0]) - 1;
+                    const d = parseInt(dataPartes[1]);
+                    const a = parseInt(dataPartes[2]);
+
+                    let h = 0, min = 0, s = 0;
+                    if (partes.length >= 2) {
+                        const horaPartes = partes[1].split(':');
+                        h = parseInt(horaPartes[0] || 0);
+                        min = parseInt(horaPartes[1] || 0);
+                        s = parseInt(horaPartes[2] || 0);
+                    }
+                    const dt = new Date(a, m, d, h, min, s);
+                    if (!isNaN(dt.getTime())) return dt;
+                }
+            }
+            const parsedNative = new Date(str);
+            return isNaN(parsedNative.getTime()) ? null : parsedNative;
+        }
+
+        function formatarParaDatetimeLocal(date) {
+            const pad = (n) => String(n).padStart(2, '0');
+            return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+        }
+
+        function definirDatasDefaultHoje() {
+            const agora = new Date();
+            const inicioHoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate(), 0, 0, 0);
+            const fimHoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate(), 23, 59, 59);
+
+            document.getElementById('inputInicio').value = formatarParaDatetimeLocal(inicioHoje);
+            document.getElementById('inputFim').value = formatarParaDatetimeLocal(fimHoje);
+        }
+
+        function calcularFFT(sinal, fs) {
+            const N = sinal.length;
+            if (N === 0) return { freqs: [], mags: [] };
+            let freqs = [];
+            let mags = [];
+            for (let k = 0; k < Math.floor(N / 2); k++) {
+                let re = 0, im = 0;
+                for (let n = 0; n < N; n++) {
+                    let angle = (2 * Math.PI * k * n) / N;
+                    re += sinal[n] * Math.cos(angle);
+                    im -= sinal[n] * Math.sin(angle);
+                }
+                let mag = Math.sqrt(re * re + im * im) / N;
+                let freq = (k * fs) / N;
+                freqs.push(freq.toFixed(2) + " Hz");
+                mags.push(mag.toFixed(4));
+            }
+            return { freqs, mags };
+        }
+
+        function baixarDadosTodasPlacas(callback) {
+            document.getElementById('lastUpdate').innerText = "Sincronizando 4 placas...";
+
+            const promessas = placasConfig.map(placa => {
+                const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&gid=${placa.id}`;
+                return fetch(url)
+                    .then(res => res.text())
+                    .then(txt => {
+                        const jsonString = txt.match(/google\.visualization\.Query\.setResponse\(([\s\S\w]+)\);/);
+                        if (!jsonString) return;
+                        const data = JSON.parse(jsonString[1]);
+                        placa.cache = data.table.rows.map(row => {
+                            if (!row.c) return null;
+                            const cell0 = row.c[0];
+                            const dateObj = parseCellDataHora(cell0);
+                            if (!dateObj) return null;
+                            const horaStr = cell0.f || cell0.v || dateObj.toLocaleString('pt-BR');
+                            const x = row.c[2] ? Number(row.c[2].v) : 0;
+                            const y = row.c[3] ? Number(row.c[3].v) : 0;
+                            const z = row.c[4] ? Number(row.c[4].v) : 0;
+                            const resultante = Math.sqrt(x * x + y * y + z * z);
+                            return {
+                                dataHora: dateObj,
+                                horaStr: horaStr,
+                                x: x,
+                                y: y,
+                                z: z,
+                                resultante: resultante,
+                                dt: row.c[5] ? Number(row.c[5].v) : 0
+                            };
+                        }).filter(item => item !== null);
+                    })
+                    .catch(err => console.error(`Erro ao carregar ${placa.nome}:`, err));
+            });
+
+            Promise.all(promessas).then(() => {
+                document.getElementById('lastUpdate').innerText = "Atualizado às " + new Date().toLocaleTimeString();
+                if (callback) callback();
+            });
+        }
+
+        function atualizarGraficosPlaca(placa, dadosFiltrados) {
+            let labels = [];
+            let dataX = [];
+            let dataY = [];
+            let dataZ = [];
+            let dataResultante = [];
+            let dts = [];
+
+            dadosFiltrados.forEach(item => {
+                labels.push(item.horaStr);
+                dataX.push(item.x);
+                dataY.push(item.y);
+                dataZ.push(item.z);
+                dataResultante.push(item.resultante);
+                if (item.dt > 0) dts.push(item.dt);
+            });
+
+            // Atualiza gráfico temporal X, Y, Z
+            const chartAcel = chartsInstances[placa.acelId];
+            if (chartAcel) {
+                chartAcel.data.labels = labels;
+                chartAcel.data.datasets[0].data = dataX;
+                chartAcel.data.datasets[1].data = dataY;
+                chartAcel.data.datasets[2].data = dataZ;
+                chartAcel.update('none');
+            }
+
+            // Calcula FFT da Resultante
+            let dtMedio = dts.length > 0 ? (dts.reduce((a, b) => a + b, 0) / dts.length) : 6.0;
+            let fs = 1.0 / dtMedio;
+            let pontosFFT = dataResultante.slice(-128);
+            let resFFT = calcularFFT(pontosFFT, fs);
+
+            // Atualiza gráfico FFT
+            const chartFFT = chartsInstances[placa.fftId];
+            if (chartFFT) {
+                chartFFT.data.labels = resFFT.freqs;
+                chartFFT.data.datasets[0].data = resFFT.mags;
+                chartFFT.update('none');
+            }
+        }
+
+        function processarModoTempoReal() {
+            placasConfig.forEach(placa => {
+                if (placa.cache.length === 0) {
+                    atualizarGraficosPlaca(placa, []);
+                    return;
+                }
+                const ultimoRegistro = placa.cache[placa.cache.length - 1];
+                const limiteTempo = new Date(ultimoRegistro.dataHora.getTime() - (24 * 60 * 60 * 1000));
+                const dadosRecentes = placa.cache.filter(item => item.dataHora >= limiteTempo);
+                atualizarGraficosPlaca(placa, dadosRecentes);
+            });
+        }
+
+        function processarModoHistorico() {
+            const inicioStr = document.getElementById('inputInicio').value;
+            const fimStr = document.getElementById('inputFim').value;
+
+            if (!inicioStr || !fimStr) return;
+
+            const dataInicio = new Date(inicioStr);
+            const dataFim = new Date(fimStr);
+
+            placasConfig.forEach(placa => {
+                const dadosFiltrados = placa.cache.filter(item => {
+                    return item.dataHora >= dataInicio && item.dataHora <= dataFim;
+                });
+                atualizarGraficosPlaca(placa, dadosFiltrados);
+            });
+        }
+
+        function carregarDadosGeral() {
+            baixarDadosTodasPlacas(() => {
+                const modo = document.getElementById('selectModo').value;
+                if (modo === 'realtime') {
+                    processarModoTempoReal();
+                } else {
+                    processarModoHistorico();
+                }
+            });
+        }
+
+        function alternarModo() {
+            const modo = document.getElementById('selectModo').value;
+            const painelRT = document.getElementById('painelRealtime');
+            const painelHist = document.getElementById('painelHistorico');
+            const txtStatus = document.getElementById('txtLiveStatus');
+
+            if (modo === 'realtime') {
+                painelRT.classList.remove('hidden');
+                painelHist.classList.add('hidden');
+                txtStatus.innerText = "MODO TEMPO REAL";
+                reiniciarTimer();
+                processarModoTempoReal();
+            } else {
+                painelRT.classList.add('hidden');
+                painelHist.classList.remove('hidden');
+                txtStatus.innerText = "MODO HISTÓRICO (JANELA)";
+                if (timerIntervalo) clearInterval(timerIntervalo);
+                processarModoHistorico();
+            }
+        }
+
+        function reiniciarTimer() {
+            if (timerIntervalo) clearInterval(timerIntervalo);
+            const intervaloMs = parseInt(document.getElementById('selectIntervalo').value);
+            timerIntervalo = setInterval(() => {
+                baixarDadosTodasPlacas(() => {
+                    const modo = document.getElementById('selectModo').value;
+                    if (modo === 'realtime') processarModoTempoReal();
+                });
+            }, intervaloMs);
+        }
+
+        function forcarAtualizacao() {
+            carregarDadosGeral();
+        }
+
+        function aplicarFiltroHistorico() {
+            processarModoHistorico();
+        }
+
+        function resetZoomTodos() {
+            Object.values(chartsInstances).forEach(chart => {
+                chart.resetZoom();
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            definirDatasDefaultHoje();
+            inicializarGraficos();
+            carregarDadosGeral();
+            reiniciarTimer();
+        });
+    </script>
+</body>
+</html>
