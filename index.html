@@ -46,13 +46,27 @@
             z-index: 1000;
             background: linear-gradient(90deg, #0B1220 0%, #1E293B 100%);
             border-bottom: 1px solid var(--border);
-            padding: 14px 24px;
+            padding: 12px 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 16px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+            flex-wrap: wrap; /* Permite quebrar linha no celular */
         }
+        
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-brand img {
+            height: 45px; /* Ajuste a altura do logo conforme necessário */
+            width: auto;
+            border-radius: 8px;
+        }
+
         .app-header h1 {
             margin: 0;
             font-size: 1.15rem;
@@ -75,6 +89,7 @@
             font-size: 0.9rem;
             font-weight: 500;
             transition: background 0.15s, color 0.15s;
+            white-space: nowrap;
         }
         .nav-tabs button:hover { color: var(--text); background: rgba(255,255,255,0.05); }
         .nav-tabs button.active { background: var(--accent); color: white; }
@@ -101,7 +116,7 @@
         }
 
         /* ================= LAYOUT ================= */
-        .page { max-width: 1800px; margin: 0 auto; padding: 24px; }
+        .page { max-width: 1800px; margin: 0 auto; padding: 20px; }
 
         section.panel {
             margin-bottom: 28px;
@@ -178,11 +193,8 @@
         /* ================= GRID DE GRÁFICOS ================= */
         .charts-grid {
             display: grid;
-            grid-template-columns: repeat(2, minmax(420px, 1fr));
+            grid-template-columns: repeat(2, minmax(400px, 1fr));
             gap: 16px;
-        }
-        @media (max-width: 1100px) {
-            .charts-grid { grid-template-columns: 1fr; }
         }
         .chart-card {
             background: var(--surface-2);
@@ -190,7 +202,7 @@
             border-radius: 8px;
             padding: 12px;
             position: relative;
-            height: 350px; /* Altura fixa ajuda o Chart.js a renderizar corretamente */
+            height: 350px;
         }
 
         /* ================= VISUALIZADOR 3D ================= */
@@ -198,7 +210,7 @@
             position: relative;
             width: 100%;
             height: 70vh;
-            min-height: 480px;
+            min-height: 400px;
             background: #1a1a1a;
             border-radius: 8px;
             overflow: hidden;
@@ -225,7 +237,7 @@
             z-index: 100;
             font-size: 13px;
             border: 1px solid var(--border);
-            min-width: 220px;
+            width: 240px;
         }
         #controls3d select {
             margin-top: 6px;
@@ -249,7 +261,7 @@
             padding: 3px 8px;
             border-radius: 4px;
         }
-        #legend-wrapper { display: flex; flex-direction: row; height: 260px; }
+        #legend-wrapper { display: flex; flex-direction: row; height: 200px; }
         #colorbar {
             width: 22px; height: 100%;
             border: 2px solid white;
@@ -275,6 +287,8 @@
             gap: 16px;
             color: var(--text-dim);
             font-size: 0.95rem;
+            text-align: center;
+            padding: 20px;
         }
         .viewer-overlay.hidden { display: none; }
         .spinner {
@@ -295,17 +309,64 @@
         ::-webkit-scrollbar-track { background: var(--bg); }
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
         ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        /* ================= RESPONSIVIDADE (MOBILE) ================= */
+        @media (max-width: 900px) {
+            .app-header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 12px;
+            }
+            .header-brand {
+                width: 100%;
+                justify-content: center;
+                margin-bottom: 10px;
+            }
+            .nav-tabs {
+                width: 100%;
+                justify-content: center;
+            }
+            .nav-tabs button { flex: 1; text-align: center; }
+            .live-indicator {
+                width: 100%;
+                justify-content: center;
+                margin-top: 5px;
+            }
+            .page { padding: 12px; }
+            .charts-grid { grid-template-columns: 1fr; } /* Vira 1 coluna */
+            .chart-card { height: 300px; }
+            .panel-body { padding: 12px; }
+            
+            /* Ajustes no painel 3D para mobile */
+            #controls3d {
+                position: relative;
+                top: 0; right: 0;
+                width: 100%;
+                border-radius: 0;
+                border-bottom: 1px solid var(--border);
+                background: rgba(15,23,42,1);
+            }
+            #info3d { display: none; } /* Esconde dica de mouse no mobile */
+            #legend-container { bottom: 10px; right: 10px; }
+            #legend-wrapper { height: 150px; }
+        }
     </style>
 </head>
 <body>
 
     <!-- ================= HEADER ================= -->
     <header class="app-header">
-        <h1><span class="bolt">⚡</span> Monitoramento Estrutural — Estrutura + Gráficos</h1>
+        <div class="header-brand">
+            <!-- Logo JEDI inserida aqui (certifique-se que o nome do arquivo está correto) -->
+            <img src="JEDI.png" alt="Logo Grupo JEDI" onerror="this.style.display='none'">
+            <h1><span class="bolt">⚡</span> Monitoramento Estrutural</h1>
+        </div>
+        
         <nav class="nav-tabs">
             <button id="tabEstrutura" onclick="navegarPara('sectionEstrutura')" class="active">Estrutura (3D)</button>
             <button id="tabGraficos" onclick="navegarPara('sectionGraficos')">Gráficos</button>
         </nav>
+        
         <div class="live-indicator">
             <span class="pulse-dot"></span>
             <span id="txtLiveStatus">MODO TEMPO REAL</span>
@@ -318,7 +379,7 @@
         <section class="panel section-anchor" id="sectionEstrutura">
             <div class="panel-header">
                 <h2>🏗️ Visualizador Estrutural Interativo</h2>
-                <span class="panel-subtitle">Rotacione com o mouse · Zoom na roda · Troque o campo e a escala</span>
+                <span class="panel-subtitle">Rotacione com o mouse · Zoom na roda · Troque o campo</span>
             </div>
             <div class="panel-body">
                 <div id="viewer3d-wrap">
@@ -376,7 +437,7 @@
                             <option value="realtime">Tempo Real (Automático)</option>
                             <option value="historico">Janela de Dados (Histórico)</option>
                         </select>
-                        <button class="secondary" onclick="resetZoomTodos()">Resetar Zoom de Todos</button>
+                        <button class="secondary" onclick="resetZoomTodos()">Resetar Zoom</button>
                     </div>
 
                     <div id="painelRealtime" class="control-row">
@@ -399,7 +460,7 @@
                         <input type="datetime-local" id="inputInicio">
                         <label>Fim:</label>
                         <input type="datetime-local" id="inputFim">
-                        <button onclick="aplicarFiltroHistorico()">Aplicar Filtro em Todas</button>
+                        <button onclick="aplicarFiltroHistorico()">Aplicar Filtro</button>
                     </div>
                 </div>
 
@@ -510,13 +571,9 @@
         const renderer = fullScreenRenderer.getRenderer();
         const renderWindow = fullScreenRenderer.getRenderWindow();
 
-        // O VTK.js já cria uma luz padrão automaticamente.
-        // Não precisamos instanciar vtkLight manualmente aqui.
-
         const actor = vtk.Rendering.Core.vtkActor.newInstance();
         const mapper = vtk.Rendering.Core.vtkMapper.newInstance();
         
-        // Propriedades de material para garantir visibilidade (opcional)
         const property = actor.getProperty();
         property.setAmbient(0.2);
         property.setDiffuse(0.8);
@@ -536,7 +593,6 @@
         return new Promise((resolve, reject) => {
             const reader = vtk.IO.XML.vtkXMLPolyDataReader.newInstance();
             
-            // ✅ CORRIGIDO: Apontando para o arquivo hospedado no seu GitHub
             const urlGithub = 'https://raw.githubusercontent.com/wlfernandes13/dashboardTCC/main/FEMMeshGmsh_mod.vtp';
             
             reader.setUrl(urlGithub).then(() => {
@@ -715,16 +771,20 @@
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false, // Importante para altura fixa do card
+                    maintainAspectRatio: false,
                     animation: false,
-                    // ✅ CORRIGIDO: Removido parsing:false e normalized:true que estavam quebrando a renderização
                     plugins: {
                         decimation: { enabled: true, algorithm: 'min-max', samples: MAX_PONTOS_GRAFICO },
-                        title: { display: true, text: `${placa.nome} - Aceleração (X, Y, Z)`, color: '#F8FAFC', font: { size: 14 } },
+                        title: { display: true, text: `${placa.nome} - Aceleração`, color: '#F8FAFC', font: { size: 14 } },
                         legend: { labels: { color: '#CBD5E1' } },
+                        // ✅ CONFIGURAÇÃO: Bloqueia zoom no eixo X, permite apenas no Y (mode: 'y') ou desativa pan
                         zoom: {
-                            zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' },
-                            pan: { enabled: true, mode: 'x' }
+                            pan: { enabled: false },
+                            zoom: { 
+                                wheel: { enabled: true }, 
+                                pinch: { enabled: true }, 
+                                mode: 'y' // Mudado de 'x' para 'y'
+                            }
                         }
                     },
                     scales: {
@@ -739,14 +799,14 @@
                 type: 'bar',
                 data: {
                     labels: [],
-                    datasets: [{ label: 'Magnitude (Resultante)', data: [], backgroundColor: '#8B5CF6' }]
+                    datasets: [{ label: 'Magnitude', data: [], backgroundColor: '#8B5CF6' }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     animation: false,
                     plugins: {
-                        title: { display: true, text: `${placa.nome} - FFT (Aceleração Resultante)`, color: '#F8FAFC', font: { size: 14 } },
+                        title: { display: true, text: `${placa.nome} - FFT`, color: '#F8FAFC', font: { size: 14 } },
                         legend: { display: false }
                     },
                     scales: {
@@ -840,7 +900,8 @@
         }
 
         const freqs = [], mags = [];
-        for (let k = 0; k < Math.floor(n / 2); k++) {
+        // ✅ CORREÇÃO: Loop começa em k = 1 para pular a frequência 0.00 Hz (DC Offset)
+        for (let k = 1; k < Math.floor(n / 2); k++) {
             const mag = Math.sqrt(re[k] * re[k] + im[k] * im[k]) / n;
             freqs.push(((k * fs) / n).toFixed(2) + ' Hz');
             mags.push(Number(mag.toFixed(4)));
