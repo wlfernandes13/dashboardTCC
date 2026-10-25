@@ -52,7 +52,7 @@
             justify-content: space-between;
             gap: 16px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.35);
-            flex-wrap: wrap; /* Permite quebrar linha no celular */
+            flex-wrap: wrap;
         }
         
         .header-brand {
@@ -62,7 +62,7 @@
         }
 
         .header-brand img {
-            height: 45px; /* Ajuste a altura do logo conforme necessário */
+            height: 45px;
             width: auto;
             border-radius: 8px;
         }
@@ -228,25 +228,31 @@
             pointer-events: none;
         }
 
+        /* Controles no desktop e mobile fora do canvas */
         #controls3d {
-            position: absolute; top: 10px; right: 10px;
-            background: rgba(15,23,42,0.9);
+            background: var(--surface-2);
             padding: 12px 14px;
             border-radius: 8px;
             color: white;
-            z-index: 100;
             font-size: 13px;
             border: 1px solid var(--border);
-            width: 240px;
-        }
-        #controls3d select {
-            margin-top: 6px;
             width: 100%;
+            margin-bottom: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 15px;
+            z-index: 10;
+        }
+        #controls3d label { font-weight: bold; }
+        #controls3d select {
+            width: auto;
+            min-width: 200px;
             background: #0B1220;
         }
-        .slider-container { margin-top: 12px; }
-        .slider-container label { display: block; margin-bottom: 4px; font-size: 12px; }
-        input[type=range] { width: 100%; accent-color: var(--accent); }
+        .slider-container { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 250px; margin-top: 0; }
+        .slider-container label { margin-bottom: 0; white-space: nowrap; }
+        input[type=range] { flex: 1; accent-color: var(--accent); }
 
         #legend-container {
             position: absolute; bottom: 20px; right: 20px;
@@ -333,20 +339,24 @@
                 margin-top: 5px;
             }
             .page { padding: 12px; }
-            .charts-grid { grid-template-columns: 1fr; } /* Vira 1 coluna */
+            .charts-grid { grid-template-columns: 1fr; }
             .chart-card { height: 300px; }
             .panel-body { padding: 12px; }
             
             /* Ajustes no painel 3D para mobile */
-            #controls3d {
-                position: relative;
-                top: 0; right: 0;
-                width: 100%;
-                border-radius: 0;
-                border-bottom: 1px solid var(--border);
-                background: rgba(15,23,42,1);
+            #viewer3d-wrap {
+                height: 60vh;
             }
-            #info3d { display: none; } /* Esconde dica de mouse no mobile */
+            #controls3d {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+            #controls3d select { width: 100%; }
+            .slider-container { flex-direction: column; align-items: flex-start; min-width: 100%; }
+            .slider-container input[type=range] { width: 100%; }
+            
+            #info3d { display: none; }
             #legend-container { bottom: 10px; right: 10px; }
             #legend-wrapper { height: 150px; }
         }
@@ -357,7 +367,7 @@
     <!-- ================= HEADER ================= -->
     <header class="app-header">
         <div class="header-brand">
-            <!-- Logo JEDI inserida aqui (certifique-se que o nome do arquivo está correto) -->
+            <!-- Certifique-se que o logo JEDI.png (ou .jpg) está na raiz do repositório -->
             <img src="JEDI.png" alt="Logo Grupo JEDI" onerror="this.style.display='none'">
             <h1><span class="bolt">⚡</span> Monitoramento Estrutural</h1>
         </div>
@@ -382,24 +392,26 @@
                 <span class="panel-subtitle">Rotacione com o mouse · Zoom na roda · Troque o campo</span>
             </div>
             <div class="panel-body">
+                
+                <!-- Controles movidos para fora do canvas (Visível no Mobile) -->
+                <div id="controls3d">
+                    <label for="fieldSelect">Resultado:</label>
+                    <select id="fieldSelect" disabled>
+                        <option value="S_Mises">Tensão (von Mises)</option>
+                        <option value="U_Mag">Deslocamento (Deformada)</option>
+                    </select>
+                    <div class="slider-container">
+                        <label for="scaleSlider">Escala da Deformada: <span id="scaleValue">50x</span></label>
+                        <input type="range" id="scaleSlider" min="0" max="200" value="50" step="10" disabled>
+                    </div>
+                </div>
+
                 <div id="viewer3d-wrap">
                     <div id="container3d"></div>
 
                     <div id="info3d">
                         <b>Visualizador</b><br>
                         <i>Arraste para rotacionar · Roda para zoom</i>
-                    </div>
-
-                    <div id="controls3d">
-                        <label for="fieldSelect">Resultado:</label>
-                        <select id="fieldSelect" disabled>
-                            <option value="S_Mises">Tensão (von Mises)</option>
-                            <option value="U_Mag">Deslocamento (Deformada)</option>
-                        </select>
-                        <div class="slider-container">
-                            <label for="scaleSlider">Escala da Deformada: <span id="scaleValue">50x</span></label>
-                            <input type="range" id="scaleSlider" min="0" max="200" value="50" step="10" disabled>
-                        </div>
                     </div>
 
                     <div id="legend-container">
@@ -777,13 +789,12 @@
                         decimation: { enabled: true, algorithm: 'min-max', samples: MAX_PONTOS_GRAFICO },
                         title: { display: true, text: `${placa.nome} - Aceleração`, color: '#F8FAFC', font: { size: 14 } },
                         legend: { labels: { color: '#CBD5E1' } },
-                        // ✅ CONFIGURAÇÃO: Bloqueia zoom no eixo X, permite apenas no Y (mode: 'y') ou desativa pan
                         zoom: {
                             pan: { enabled: false },
                             zoom: { 
                                 wheel: { enabled: true }, 
                                 pinch: { enabled: true }, 
-                                mode: 'y' // Mudado de 'x' para 'y'
+                                mode: 'y' // Bloqueia zoom no eixo X, permite apenas no Y
                             }
                         }
                     },
