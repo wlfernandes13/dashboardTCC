@@ -190,10 +190,11 @@
             margin-left: auto;
         }
 
-        /* ================= GRID DE GRÁFICOS ================= */
+        /* ================= GRID DE GRÁFICOS (CORRIGIDO) ================= */
         .charts-grid {
             display: grid;
-            grid-template-columns: repeat(2, minmax(400px, 1fr));
+            /* Muda automaticamente de 1 a 2 colunas dependendo do espaço, sem forçar largura mínima grande */
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 16px;
         }
         .chart-card {
@@ -202,7 +203,10 @@
             border-radius: 8px;
             padding: 12px;
             position: relative;
-            height: 350px;
+            /* Altura responsiva: mínimo 280px, ideal 35vh, máximo 400px */
+            height: clamp(280px, 40vh, 400px); 
+            width: 100%;
+            overflow: hidden; /* Impede que o canvas quebre o layout */
         }
 
         /* ================= VISUALIZADOR 3D ================= */
@@ -339,9 +343,6 @@
                 margin-top: 5px;
             }
             .page { padding: 12px; }
-            .charts-grid { grid-template-columns: 1fr; }
-            .chart-card { height: 300px; }
-            .panel-body { padding: 12px; }
             
             /* Ajustes no painel 3D para mobile */
             #viewer3d-wrap {
@@ -359,6 +360,22 @@
             #info3d { display: none; }
             #legend-container { bottom: 10px; right: 10px; }
             #legend-wrapper { height: 150px; }
+
+            /* Ajuste no controle de dados para mobile */
+            .status-badge {
+                margin-left: 0;
+                width: 100%;
+                text-align: center;
+                margin-top: 5px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            /* Telas muito pequenas (celulares antigos ou em pé) */
+            .chart-card {
+                height: 260px; /* Garante que o gráfico não suma em telas minúsculas */
+                padding: 6px;
+            }
         }
     </style>
 </head>
@@ -367,7 +384,6 @@
     <!-- ================= HEADER ================= -->
     <header class="app-header">
         <div class="header-brand">
-            <!-- Certifique-se que o logo JEDI.png (ou .jpg) está na raiz do repositório -->
             <img src="JEDI.png" alt="Logo Grupo JEDI" onerror="this.style.display='none'">
             <h1><span class="bolt">⚡</span> Monitoramento Estrutural</h1>
         </div>
@@ -393,7 +409,6 @@
             </div>
             <div class="panel-body">
                 
-                <!-- Controles movidos para fora do canvas (Visível no Mobile) -->
                 <div id="controls3d">
                     <label for="fieldSelect">Resultado:</label>
                     <select id="fieldSelect" disabled>
@@ -444,10 +459,10 @@
 
                 <div class="controls" style="margin-bottom: 20px;">
                     <div class="control-row">
-                        <label style="font-weight: 600; color: var(--text);">Modo de Visualização:</label>
+                        <label style="font-weight: 600; color: var(--text);">Modo:</label>
                         <select id="selectModo" onchange="alternarModo()">
-                            <option value="realtime">Tempo Real (Automático)</option>
-                            <option value="historico">Janela de Dados (Histórico)</option>
+                            <option value="realtime">Tempo Real</option>
+                            <option value="historico">Histórico</option>
                         </select>
                         <button class="secondary" onclick="resetZoomTodos()">Resetar Zoom</button>
                     </div>
@@ -463,7 +478,7 @@
                             <option value="1800000">30 minutos</option>
                             <option value="3600000">1 hora</option>
                         </select>
-                        <button onclick="forcarAtualizacao()">Sincronizar Agora</button>
+                        <button onclick="forcarAtualizacao()">Sincronizar</button>
                         <span id="lastUpdate" class="status-badge">Pronto</span>
                     </div>
 
@@ -787,20 +802,20 @@
                     animation: false,
                     plugins: {
                         decimation: { enabled: true, algorithm: 'min-max', samples: MAX_PONTOS_GRAFICO },
-                        title: { display: true, text: `${placa.nome} - Aceleração`, color: '#F8FAFC', font: { size: 14 } },
-                        legend: { labels: { color: '#CBD5E1' } },
+                        title: { display: true, text: `${placa.nome} - Aceleração`, color: '#F8FAFC', font: { size: 13 } },
+                        legend: { labels: { color: '#CBD5E1', boxWidth: 12, font: { size: 10 } } },
                         zoom: {
                             pan: { enabled: false },
                             zoom: { 
                                 wheel: { enabled: true }, 
                                 pinch: { enabled: true }, 
-                                mode: 'y' // Bloqueia zoom no eixo X, permite apenas no Y
+                                mode: 'y'
                             }
                         }
                     },
                     scales: {
-                        x: { ticks: { color: '#CBD5E1', maxTicksLimit: 8 }, grid: { color: '#334155' } },
-                        y: { ticks: { color: '#CBD5E1' }, grid: { color: '#334155' } }
+                        x: { ticks: { color: '#CBD5E1', maxTicksLimit: 5, font: { size: 10 } }, grid: { color: '#334155' } },
+                        y: { ticks: { color: '#CBD5E1', font: { size: 10 } }, grid: { color: '#334155' } }
                     }
                 }
             });
@@ -817,14 +832,21 @@
                     maintainAspectRatio: false,
                     animation: false,
                     plugins: {
-                        title: { display: true, text: `${placa.nome} - FFT`, color: '#F8FAFC', font: { size: 14 } },
+                        title: { display: true, text: `${placa.nome} - FFT`, color: '#F8FAFC', font: { size: 13 } },
                         legend: { display: false }
                     },
                     scales: {
-                        x: { ticks: { color: '#CBD5E1', maxTicksLimit: 8 }, grid: { color: '#334155' } },
-                        y: { ticks: { color: '#CBD5E1' }, grid: { color: '#334155' } }
+                        x: { ticks: { color: '#CBD5E1', maxTicksLimit: 5, font: { size: 10 } }, grid: { color: '#334155' } },
+                        y: { ticks: { color: '#CBD5E1', font: { size: 10 } }, grid: { color: '#334155' } }
                     }
                 }
+            });
+        });
+
+        // ✅ CORREÇÃO: Força o Chart.js a recalcular o tamanho se a tela girar ou mudar de tamanho
+        window.addEventListener('resize', () => {
+            Object.values(AppState.chartsInstances).forEach(chart => {
+                chart.resize();
             });
         });
     }
@@ -911,7 +933,6 @@
         }
 
         const freqs = [], mags = [];
-        // ✅ CORREÇÃO: Loop começa em k = 1 para pular a frequência 0.00 Hz (DC Offset)
         for (let k = 1; k < Math.floor(n / 2); k++) {
             const mag = Math.sqrt(re[k] * re[k] + im[k] * im[k]) / n;
             freqs.push(((k * fs) / n).toFixed(2) + ' Hz');
