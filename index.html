@@ -666,16 +666,25 @@
         let values = null;
         let min = 0, max = 1;
 
-        if (AppState.currentField === 'S_Mises') {
-            const scalarArray = pointData.getArrayByName('S_Mises');
-            if (scalarArray) {
-                values = scalarArray.getData();
-                const range = scalarArray.getRange();
-                min = range[0];
-                max = range[1];
-                document.getElementById('legend-title').innerText = 'von Mises (MPa)';
-            }
-        } else {
+		if (AppState.currentField === 'S_Mises') {
+			const scalarArray = pointData.getArrayByName('S_Mises');
+			if (scalarArray) {
+				values = scalarArray.getData();
+				const range = scalarArray.getRange();
+
+				// ⚠️ CONVERSÃO Pa → MPa (1 MPa = 1e6 Pa)
+				const PA_PARA_MPA = 1e-6;
+
+				min = range[0] * PA_PARA_MPA;
+				max = range[1] * PA_PARA_MPA;
+
+				// Também converte o array de valores para o cálculo da cor (senão a cor
+				// continuaria baseada em Pa enquanto a legenda mostra MPa)
+				values = values.map(v => v * PA_PARA_MPA); // ou: Float32Array.from(values, v => v * PA_PARA_MPA)
+
+				document.getElementById('legend-title').innerText = 'von Mises (MPa)';
+			}
+		} else {
             const uArray = pointData.getArrayByName('U');
             if (uArray) {
                 const points = polydata.getPoints();
