@@ -1,0 +1,107 @@
+====================================================================================================
+ RELATÓRIO DE ANÁLISE MODAL — CalculiX
+ Arquivo .dat : FEMMeshGmsh_modal.dat
+ Arquivo .frd : FEMMeshGmsh_modal.frd
+ Gerado em    : 2026-11-15 12:28:00
+====================================================================================================
+
+Modo |  Freq (Hz) | Período (s) |  ω (rad/s) | Massa X%       Y%       Z%      RX%      RY%      RZ% |   Origem
+---------------------------------------------------------------------------------------------------------------
+   1 |     4,1717 |    0,239709 |    26,2117 |    3,357   79,821    0,003   94,863    3,947    5,517 |  dat+frd
+   2 |     4,1886 |    0,238742 |    26,3179 |   80,750    3,320    0,076    3,945   94,931    0,230 |  dat+frd
+   3 |    32,3242 |    0,030937 |   203,0989 |    0,000    0,035    0,000    0,005    0,000   94,161 |  dat+frd
+   4 |    39,3032 |    0,025443 |   246,9491 |    0,003   10,461    0,000    0,999    0,000    0,054 |  dat+frd
+   5 |    42,0695 |    0,023770 |   264,3302 |   10,674    0,003    1,435    0,000    0,969    0,000 |  dat+frd
+   6 |   110,3609 |    0,009061 |   693,4181 |    0,001    4,170    0,000    0,153    0,000    0,022 |  dat+frd
+   7 |   119,0467 |    0,008400 |   747,9922 |    3,774    0,001    0,407    0,000    0,128    0,000 |  dat+frd
+   8 |   163,8189 |    0,006104 | 1.029,3050 |    0,117    0,000    0,049    0,000    0,003    0,000 |  dat+frd
+   9 |   246,8667 |    0,004051 | 1.551,1090 |    0,003    2,186    0,034    0,035    0,000    0,015 |  dat+frd
+  10 |   250,7435 |    0,003988 | 1.575,4680 |    1,321    0,003   97,995    0,000    0,021    0,000 |  dat+frd
+
+====================================================================================================
+ DESCRIÇÃO DOS MODOS DE VIBRAÇÃO
+====================================================================================================
+
+▸ Modo 01  —  4,1717 Hz  (T = 0,239709 s, ω = 26,2117 rad/s)
+   Direção dominante : RX
+   Tipo              : torção / rotacional
+   Descrição         : Modo de torção / rotacional predominante em rotação X
+   Confiança         : 94,9 %
+   Massa efetiva (%) : X=3,36  Y=79,82  Z=0,00  RX=94,86  RY=3,95  RZ=5,52
+   Fatores particip. : Γx=-0,0273  Γy=0,1335  Γz=0,0005  Γrx=-298,5081  Γry=-60,8279  Γrz=3,5646
+
+▸ Modo 02  —  4,1886 Hz  (T = 0,238742 s, ω = 26,3179 rad/s)
+   Direção dominante : RY
+   Tipo              : torção / rotacional
+   Descrição         : Modo de torção / rotacional predominante em rotação Y
+   Confiança         : 94,9 %
+   Massa efetiva (%) : X=80,75  Y=3,32  Z=0,08  RX=3,95  RY=94,93  RZ=0,23
+   Fatores particip. : Γx=-0,1338  Γy=-0,0272  Γz=0,0022  Γrx=60,8747  Γry=-298,2957  Γrz=-0,7285
+
+▸ Modo 03  —  32,3242 Hz  (T = 0,030937 s, ω = 203,0989 rad/s)
+   Direção dominante : RZ
+   Tipo              : torção / rotacional
+   Descrição         : Modo de torção / rotacional predominante em rotação Z
+   Confiança         : 94,2 %
+   Massa efetiva (%) : X=0,00  Y=0,04  Z=0,00  RX=0,01  RY=0,00  RZ=94,16
+   Fatores particip. : Γx=0,0000  Γy=-0,0028  Γz=0,0000  Γrx=2,2295  Γry=0,0349  Γrz=14,7262
+
+▸ Modo 04  —  39,3032 Hz  (T = 0,025443 s, ω = 246,9491 rad/s)
+   Direção dominante : Y
+   Tipo              : flexão / translacional
+   Descrição         : Modo de flexão / translacional predominante em Y
+   Confiança         : 10,5 %
+   Massa efetiva (%) : X=0,00  Y=10,46  Z=0,00  RX=1,00  RY=0,00  RZ=0,05
+   Fatores particip. : Γx=-0,0008  Γy=0,0483  Γz=-0,0002  Γrx=-30,6299  Γry=-0,4993  Γrz=0,3517
+
+▸ Modo 05  —  42,0695 Hz  (T = 0,023770 s, ω = 264,3302 rad/s)
+   Direção dominante : X
+   Tipo              : flexão / translacional
+   Descrição         : Modo de flexão / translacional predominante em X
+   Confiança         : 10,7 %
+   Massa efetiva (%) : X=10,67  Y=0,00  Z=1,43  RX=0,00  RY=0,97  RZ=0,00
+   Fatores particip. : Γx=0,0486  Γy=0,0008  Γz=0,0097  Γrx=-0,4701  Γry=30,1375  Γrz=0,0026
+
+▸ Modo 06  —  110,3609 Hz  (T = 0,009061 s, ω = 693,4181 rad/s)
+   Direção dominante : Y
+   Tipo              : local / simétrico
+   Descrição         : Modo local / simétrico (baixa participação global de massa)
+   Confiança         : 16,6 %
+   Massa efetiva (%) : X=0,00  Y=4,17  Z=0,00  RX=0,15  RY=0,00  RZ=0,02
+   Fatores particip. : Γx=-0,0004  Γy=0,0305  Γz=0,0000  Γrx=-11,9946  Γry=-0,1430  Γrz=-0,2254
+
+▸ Modo 07  —  119,0467 Hz  (T = 0,008400 s, ω = 747,9922 rad/s)
+   Direção dominante : X
+   Tipo              : local / simétrico
+   Descrição         : Modo local / simétrico (baixa participação global de massa)
+   Confiança         : 24,5 %
+   Massa efetiva (%) : X=3,77  Y=0,00  Z=0,41  RX=0,00  RY=0,13  RZ=0,00
+   Fatores particip. : Γx=0,0289  Γy=0,0004  Γz=-0,0052  Γrx=-0,1655  Γry=10,9697  Γrz=-0,0015
+
+▸ Modo 08  —  163,8189 Hz  (T = 0,006104 s, ω = 1.029,3050 rad/s)
+   Direção dominante : X
+   Tipo              : local / simétrico
+   Descrição         : Modo local / simétrico (baixa participação global de massa)
+   Confiança         : 97,7 %
+   Massa efetiva (%) : X=0,12  Y=0,00  Z=0,05  RX=0,00  RY=0,00  RZ=0,00
+   Fatores particip. : Γx=-0,0051  Γy=0,0001  Γz=-0,0018  Γrx=-0,0198  Γry=-1,6125  Γrz=0,0079
+
+▸ Modo 09  —  246,8667 Hz  (T = 0,004051 s, ω = 1.551,1090 rad/s)
+   Direção dominante : Y
+   Tipo              : local / simétrico
+   Descrição         : Modo local / simétrico (baixa participação global de massa)
+   Confiança         : 56,3 %
+   Massa efetiva (%) : X=0,00  Y=2,19  Z=0,03  RX=0,03  RY=0,00  RZ=0,02
+   Fatores particip. : Γx=-0,0007  Γy=0,0221  Γz=0,0015  Γrx=-5,7149  Γry=-0,1873  Γrz=0,1881
+
+▸ Modo 10  —  250,7435 Hz  (T = 0,003988 s, ω = 1.575,4680 rad/s)
+   Direção dominante : Z
+   Tipo              : flexão / translacional
+   Descrição         : Modo de flexão / translacional predominante em Z
+   Confiança         : 98,0 %
+   Massa efetiva (%) : X=1,32  Y=0,00  Z=98,00  RX=0,00  RY=0,02  RZ=0,00
+   Fatores particip. : Γx=-0,0171  Γy=-0,0008  Γz=0,0801  Γrx=0,1945  Γry=-4,4084  Γrz=-0,0086
+
+====================================================================================================
+ FIM DO RELATÓRIO
+====================================================================================================
