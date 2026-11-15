@@ -2,7 +2,7 @@
  RELATÓRIO DE ANÁLISE MODAL — CalculiX
  Arquivo .dat : FEMMeshGmsh_modal.dat
  Arquivo .frd : FEMMeshGmsh_modal.frd
- Gerado em    : 2026-11-15 12:28:00
+ Gerado em    : 2026-11-15 14:33:28
 ====================================================================================================
 
 Modo |  Freq (Hz) | Período (s) |  ω (rad/s) | Massa X%       Y%       Z%      RX%      RY%      RZ% |   Origem
