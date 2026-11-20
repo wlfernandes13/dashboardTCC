@@ -8,31 +8,67 @@
     "part": [
       -0.02728137,
       0.1334601,
-      0.0004511608,
+      0.0004511599,
       -298.5081,
       -60.82791,
       3.564609
     ],
     "massa_efetiva": [
-      0.0007442731,
+      0.000744273,
       0.01781159,
-      2.035461e-07,
+      2.035452e-07,
       89107.09,
       3700.035,
       12.70644
     ],
     "massa_pct": [
-      100.0,
-      100.0,
-      100.0,
-      100.0,
-      100.0,
-      100.0
+      3.9916303046684947,
+      96.00693171772924,
+      3.9105533251245963,
+      96.00730804214331,
+      3.992253159973358,
+      95.99089832916954
     ],
-    "direcao_dominante": "X",
-    "tipo_modo": "flexão / translacional",
-    "descricao": "Modo de flexão / translacional predominante em X",
+    "direcao_dominante": "RX",
+    "tipo_modo": "torção / rotacional",
+    "descricao": "Modo de torção / rotacional predominante em rotação X",
     "origem": "dat+frd",
-    "confianca": 1.0
+    "confianca": 0.960073080421433
+  },
+  {
+    "numero": 2,
+    "autovalor": 692.6313,
+    "omega": 26.31789,
+    "freq_hz": 4.188622,
+    "periodo_s": 0.23874200154609324,
+    "part": [
+      -0.1337967,
+      -0.0272178,
+      0.002236398,
+      60.87475,
+      -298.2957,
+      -0.7284869
+    ],
+    "massa_efetiva": [
+      0.01790157,
+      0.0007408085,
+      5.001477e-06,
+      3705.736,
+      88980.33,
+      0.5306932
+    ],
+    "massa_pct": [
+      96.00838578471121,
+      3.993060197063453,
+      96.08943130510663,
+      3.9926984224808595,
+      96.00774144514098,
+      4.009125845254975
+    ],
+    "direcao_dominante": "Z",
+    "tipo_modo": "flexão / translacional",
+    "descricao": "Modo de flexão / translacional predominante em Z",
+    "origem": "dat+frd",
+    "confianca": 0.9608943130510663
   }
 ]
