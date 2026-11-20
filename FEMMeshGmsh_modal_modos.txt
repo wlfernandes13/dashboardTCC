@@ -2,24 +2,33 @@
  RELATÓRIO DE ANÁLISE MODAL — CalculiX
  Arquivo .dat : FEMMeshGmsh_modal.dat
  Arquivo .frd : FEMMeshGmsh_modal.frd
- Gerado em    : 2026-11-20 11:53:20
+ Gerado em    : 2026-11-20 11:59:40
 ====================================================================================================
 
 Modo |  Freq (Hz) | Período (s) |  ω (rad/s) | Massa X%       Y%       Z%      RX%      RY%      RZ% |   Origem
 ---------------------------------------------------------------------------------------------------------------
-   1 |     4,1717 |    0,239709 |    26,2117 |  100,000  100,000  100,000  100,000  100,000  100,000 |  dat+frd
+   1 |     4,1717 |    0,239709 |    26,2117 |    3,992   96,007    3,911   96,007    3,992   95,991 |  dat+frd
+   2 |     4,1886 |    0,238742 |    26,3179 |   96,008    3,993   96,089    3,993   96,008    4,009 |  dat+frd
 
 ====================================================================================================
  DESCRIÇÃO DOS MODOS DE VIBRAÇÃO
 ====================================================================================================
 
 ▸ Modo 01  —  4,1717 Hz  (T = 0,239709 s, ω = 26,2117 rad/s)
-   Direção dominante : X
-   Tipo              : flexão / translacional
-   Descrição         : Modo de flexão / translacional predominante em X
-   Confiança         : 100,0 %
-   Massa efetiva (%) : X=100,00  Y=100,00  Z=100,00  RX=100,00  RY=100,00  RZ=100,00
+   Direção dominante : RX
+   Tipo              : torção / rotacional
+   Descrição         : Modo de torção / rotacional predominante em rotação X
+   Confiança         : 96,0 %
+   Massa efetiva (%) : X=3,99  Y=96,01  Z=3,91  RX=96,01  RY=3,99  RZ=95,99
    Fatores particip. : Γx=-0,0273  Γy=0,1335  Γz=0,0005  Γrx=-298,5081  Γry=-60,8279  Γrz=3,5646
+
+▸ Modo 02  —  4,1886 Hz  (T = 0,238742 s, ω = 26,3179 rad/s)
+   Direção dominante : Z
+   Tipo              : flexão / translacional
+   Descrição         : Modo de flexão / translacional predominante em Z
+   Confiança         : 96,1 %
+   Massa efetiva (%) : X=96,01  Y=3,99  Z=96,09  RX=3,99  RY=96,01  RZ=4,01
+   Fatores particip. : Γx=-0,1338  Γy=-0,0272  Γz=0,0022  Γrx=60,8747  Γry=-298,2957  Γrz=-0,7285
 
 ====================================================================================================
  FIM DO RELATÓRIO
